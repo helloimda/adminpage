@@ -1,11 +1,14 @@
 const axios = require('axios');
 
 const adminCheckMiddleware = async (req, res, next) => {
-    const token = req.headers['authorization'];
+    const authHeader = req.headers['authorization'];
 
-    if (!token) {
+    if (!authHeader) {
         return res.status(403).json({ message: '토큰이 제공되지 않았습니다.' });
     }
+
+    // 'Bearer '를 분리하여 토큰만 추출
+    const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
 
     try {
         // API로 토큰을 검증하는 요청을 보냅니다.
