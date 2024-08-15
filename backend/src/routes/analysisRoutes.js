@@ -10,6 +10,9 @@ router.get('/analysis/daily-visitors', analysisController.getDailyVisitors);
 router.get('/analysis/today-registrations', analysisController.getTodayRegistrations);
 
 // 총 회원 수를 가져오는 라우트
-router.get('/analysis/total-members', analysisController.getTotalMembers);  // 새로운 라우트 추가
+router.get('/analysis/total-members', analysisController.getTotalMembers);
+
+// 성별 및 연령대 집계 라우트
+router.get('/analysis/gender-age-stats', analysisController.getGenderAndAgeStats);  // 새로운 라우트 추가
 
 module.exports = router;
