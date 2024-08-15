@@ -2,96 +2,111 @@
 
 import type { User } from '@/types/user';
 
-function generateToken(): string {
-  const arr = new Uint8Array(12);
-  window.crypto.getRandomValues(arr);
-  return Array.from(arr, (v) => v.toString(16).padStart(2, '0')).join('');
-}
-
-const user = {
-  id: 'USR-000',
-  avatar: '/assets/avatar.png',
-  firstName: 'Sofia',
-  lastName: 'Rivers',
-  email: 'sofia@devias.io',
-} satisfies User;
-
-export interface SignUpParams {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-}
-
-export interface SignInWithOAuthParams {
-  provider: 'google' | 'discord';
-}
-
 export interface SignInWithPasswordParams {
-  email: string;
-  password: string;
+  id: string;
+  pass: string;
 }
 
-export interface ResetPasswordParams {
-  email: string;
+interface LoginAPiResponse {
+  success: boolean;
+  message: string;
+  errorCode: number;
+  data: {
+    mem_idx: number;
+    mem_id: string;
+    mem_nick: string | null;
+    mem_profile_url: string | null;
+    isadmin: string;
+    token: string;
+  };
 }
 
 class AuthClient {
-  async signUp(_: SignUpParams): Promise<{ error?: string }> {
-    // Make API request
+  async signInWithPassword(params: SignInWithPasswordParams): Promise<{ data?: User | null; error?: string }> {
+    const { id, pass } = params;
 
-    // We do not handle the API, so we'll just generate a token and store it in localStorage.
-    const token = generateToken();
-    localStorage.setItem('custom-auth-token', token);
+    try {
+      const response = await fetch('https://api.hituru.com:22443/v1.0/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id, pass }),
+      });
 
-    return {};
-  }
+      const result = (await response.json()) as LoginAPiResponse;
 
-  async signInWithOAuth(_: SignInWithOAuthParams): Promise<{ error?: string }> {
-    return { error: 'Social authentication not implemented' };
-  }
+      if (result.success && result.data) {
+        const { token, ...userData } = result.data;
 
-  async signInWithPassword(params: SignInWithPasswordParams): Promise<{ error?: string }> {
-    const { email, password } = params;
+        if (userData.mem_idx && userData.mem_id && userData.isadmin) {
+          localStorage.setItem('auth-token', token);
 
-    // Make API request
+          const user: User = {
+            mem_idx: userData.mem_idx,
+            mem_id: userData.mem_id,
+            mem_nick: userData.mem_nick,
+            mem_profile_url: userData.mem_profile_url,
+            isadmin: userData.isadmin,
+          };
 
-    // We do not handle the API, so we'll check if the credentials match with the hardcoded ones.
-    if (email !== 'sofia@devias.io' || password !== 'Secret1') {
-      return { error: 'Invalid credentials' };
+          return { data: user };
+        }
+      }
+
+      return { error: result.message || '로그인에 실패하였습니다.' };
+    } catch (error) {
+      return { error: '네트워크 오류가 발생했습니다.' };
     }
-
-    const token = generateToken();
-    localStorage.setItem('custom-auth-token', token);
-
-    return {};
-  }
-
-  async resetPassword(_: ResetPasswordParams): Promise<{ error?: string }> {
-    return { error: 'Password reset not implemented' };
-  }
-
-  async updatePassword(_: ResetPasswordParams): Promise<{ error?: string }> {
-    return { error: 'Update reset not implemented' };
   }
 
   async getUser(): Promise<{ data?: User | null; error?: string }> {
-    // Make API request
-
-    // We do not handle the API, so just check if we have a token in localStorage.
-    const token = localStorage.getItem('custom-auth-token');
+    const token = localStorage.getItem('auth-token');
 
     if (!token) {
       return { data: null };
     }
 
-    return { data: user };
+    try {
+      const response = await fetch('https://api.hituru.com:22443/v1.0/admin/tokenCheck', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      const result = (await response.json()) as LoginAPiResponse;
+
+      if (result.success && result.data) {
+        const { ...userData } = result.data;
+
+        if (userData.mem_idx && userData.mem_id && userData.isadmin) {
+          const user: User = {
+            mem_idx: userData.mem_idx,
+            mem_id: userData.mem_id,
+            mem_nick: userData.mem_nick,
+            mem_profile_url: userData.mem_profile_url,
+            isadmin: userData.isadmin,
+          };
+
+          return { data: user };
+        }
+      }
+
+      return { data: null };
+    } catch (error) {
+      return { error: '사용자 정보를 가져오는 데 실패했습니다.' };
+    }
   }
 
   async signOut(): Promise<{ error?: string }> {
-    localStorage.removeItem('custom-auth-token');
-
-    return {};
+    try {
+      localStorage.removeItem('auth-token');
+      return {};
+    } catch (error) {
+      return { error: '로그아웃 중 오류가 발생했습니다.' };
+    }
   }
 }
 
