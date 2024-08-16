@@ -34,8 +34,8 @@ export function CustomersStatisticsChart(): React.JSX.Element {
 
   const theme = useTheme();
 
-  const latestCount = memberCount.length > 0 ? Object.values(memberCount[memberCount.length - 1])[0] : 0;
-  const previousCount = memberCount.length > 1 ? Object.values(memberCount[memberCount.length - 2])[0] : 0;
+  const latestCount = memberCount.length > 0 ? Object.values(memberCount[memberCount.length - 1])[0] || 0 : 0;
+  const previousCount = memberCount.length > 1 ? Object.values(memberCount[memberCount.length - 2])[0] || 0 : 0;
   const increase = latestCount - previousCount;
 
   const increasePercentage = React.useMemo(() => {
@@ -50,7 +50,7 @@ export function CustomersStatisticsChart(): React.JSX.Element {
       background: 'transparent',
       toolbar: { show: false },
     },
-    colors: [theme.palette.primary.main, theme.palette.secondary.main, theme.palette.error.main], // 각각의 시리즈에 색상 지정
+    colors: [theme.palette.primary.main, theme.palette.secondary.main, theme.palette.error.main],
     stroke: {
       curve: 'smooth',
       width: 2,
@@ -68,7 +68,13 @@ export function CustomersStatisticsChart(): React.JSX.Element {
       yaxis: { lines: { show: true } },
     },
     xaxis: {
-      categories: memberCount.map((item) => Object.keys(item)[0]), // 날짜를 x축에 반영
+      categories:
+        memberCount && memberCount.length > 0
+          ? memberCount.map((item) => {
+              const key = Object.keys(item)[0];
+              return key ? key.toString() : 'Unknown';
+            })
+          : ['No Data'],
       labels: {
         style: {
           colors: theme.palette.text.primary,
@@ -89,7 +95,7 @@ export function CustomersStatisticsChart(): React.JSX.Element {
     tooltip: {
       theme: 'dark',
       y: {
-        formatter: (val: number) => `${val.toLocaleString()}명`,
+        formatter: (val: number) => `${val?.toLocaleString()}명`,
       },
     },
     legend: {
@@ -102,20 +108,24 @@ export function CustomersStatisticsChart(): React.JSX.Element {
     },
   };
 
-  const chartSeries = [
-    {
-      name: '회원수',
-      data: memberCount.map((item) => Object.values(item)[0]), // 회원 수 데이터
-    },
-    {
-      name: '오늘 가입한 회원수',
-      data: registerCount.map((item) => Object.values(item)[0]), // 가입자 수 데이터
-    },
-    {
-      name: '오늘 방문자 수',
-      data: visitedCount.map((item) => Object.values(item)[0]), // 방문자 수 데이터
-    },
-  ];
+  const chartSeries = React.useMemo(
+    () => [
+      {
+        name: '회원수',
+        data: memberCount && memberCount.length > 0 ? memberCount.map((item) => Object.values(item)[0] || 0) : [0],
+      },
+      {
+        name: '오늘 가입한 회원수',
+        data:
+          registerCount && registerCount.length > 0 ? registerCount.map((item) => Object.values(item)[0] || 0) : [0],
+      },
+      {
+        name: '오늘 방문자 수',
+        data: visitedCount && visitedCount.length > 0 ? visitedCount.map((item) => Object.values(item)[0] || 0) : [0],
+      },
+    ],
+    [memberCount, registerCount, visitedCount]
+  );
 
   const handlePeriodChange = (period: MemberDateType): void => {
     setSelectedPeriod(period);
@@ -128,17 +138,17 @@ export function CustomersStatisticsChart(): React.JSX.Element {
           전체 회원수
         </Typography>
         <Typography variant="h4" component="div">
-          {latestCount.toLocaleString()}명
+          {(latestCount ?? 0).toLocaleString()}명
         </Typography>
         <Typography color="textSecondary" sx={{ mb: 2 }}>
           {selectedPeriod === 'date' ? '지난일에' : selectedPeriod === 'week' ? '지난주에' : '지난달에'}{' '}
-          <strong>{Math.abs(increase).toLocaleString()}명</strong> {increase >= 0 ? '증가했어요.' : '감소했어요.'}
+          <strong>{Math.abs(increase ?? 0).toLocaleString()}명</strong> {increase >= 0 ? '증가했어요.' : '감소했어요.'}
           <Typography
             component="span"
             color={increase >= 0 ? 'success.main' : 'error'}
             sx={{ ml: 1, fontWeight: 'bold' }}
           >
-            {increasePercentage.toFixed(2)}%{' '}
+            {(increasePercentage ?? 0).toFixed(2)}%{' '}
             {increase >= 0 ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
           </Typography>
         </Typography>
@@ -177,10 +187,10 @@ export function CustomersStatisticsChart(): React.JSX.Element {
           </Typography>
         ) : memberCountError || visitedCountError || registerError ? (
           <Typography variant="body2" color="error">
-            {memberCountError || visitedCountError || registerError}
+            데이터를 불러오는 중 오류가 발생했습니다.
           </Typography>
         ) : (
-          <Chart options={chartOptions} series={chartSeries} type="line" height={350} />
+          <Chart options={chartOptions} series={chartSeries} type="line" height={350} width="100%" />
         )}
       </CardContent>
     </Card>

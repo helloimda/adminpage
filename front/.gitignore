@@ -1,1 +1,8 @@
-node_modules
+# Node modules
+node_modules/
+
+# Next.js build output
+.next/
+
+# 환경 변수 파일
+.env

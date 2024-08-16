@@ -13,44 +13,121 @@ import Typography from '@mui/material/Typography';
 import type { ApexOptions } from 'apexcharts';
 
 import type { MemberDateType } from '@/types/customer';
-import { useMembersCountByType } from '@/hooks/use-customer';
+import { useMembersCountByType, useMembersRegisterByType, useMembersVisitedByType } from '@/hooks/use-customer';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-export function MemberGrowthChart(): React.JSX.Element {
+export function CustomersStatisticsChart(): React.JSX.Element {
   const [selectedPeriod, setSelectedPeriod] = React.useState<MemberDateType>('date');
-  const { memberCount, loading, error } = useMembersCountByType(selectedPeriod);
 
-  const { increase, increasePercentage } = React.useMemo(() => {
-    if (memberCount.length < 2) return { increase: 0, increasePercentage: 0 };
+  const { memberCount, loading: memberCountLoading, error: memberCountError } = useMembersCountByType(selectedPeriod);
+  const {
+    memberCount: visitedCount,
+    loading: visitedCountLoading,
+    error: visitedCountError,
+  } = useMembersVisitedByType(selectedPeriod);
+  const {
+    memberCount: registerCount,
+    loading: registerLoading,
+    error: registerError,
+  } = useMembersRegisterByType(selectedPeriod);
 
-    const latestCount = Object.values(memberCount[memberCount.length - 1])[0];
-    const previousCount = Object.values(memberCount[memberCount.length - 2])[0];
-    const increase = latestCount - previousCount;
+  const theme = useTheme();
 
-    let increasePercentage;
+  const latestCount = memberCount.length > 0 ? Object.values(memberCount[memberCount.length - 1])[0] : 0;
+  const previousCount = memberCount.length > 1 ? Object.values(memberCount[memberCount.length - 2])[0] : 0;
+  const increase = latestCount - previousCount;
+
+  const increasePercentage = React.useMemo(() => {
     if (previousCount === 0) {
-      increasePercentage = latestCount > 0 ? 100 : 0;
-    } else {
-      increasePercentage = (increase / previousCount) * 100;
+      return latestCount > 0 ? 100 : 0;
     }
+    return (increase / previousCount) * 100;
+  }, [latestCount, previousCount, increase]);
 
-    return { increase, increasePercentage };
-  }, [memberCount]);
+  const categories =
+    memberCount && memberCount.length > 0
+      ? memberCount.map((item) => {
+          const key = Object.keys(item)[0];
+          return key ? key.toString() : 'Unknown';
+        })
+      : ['No Data'];
 
-  const chartOptions = useChartOptions(memberCount);
-
-  const updatedChartSeries = React.useMemo(() => {
-    return [
-      {
-        name: '회원가입 수',
-        data: memberCount.map((item) => {
-          const [_date, count] = Object.entries(item)[0];
-          return count;
-        }),
+  const chartOptions: ApexOptions = {
+    chart: {
+      background: 'transparent',
+      toolbar: { show: false },
+    },
+    colors: [theme.palette.primary.main, theme.palette.secondary.main, theme.palette.error.main],
+    stroke: {
+      curve: 'smooth',
+      width: 2,
+    },
+    markers: {
+      size: 4,
+      colors: [theme.palette.primary.main, theme.palette.secondary.main, theme.palette.error.main],
+      strokeColors: theme.palette.background.paper,
+      strokeWidth: 2,
+    },
+    grid: {
+      borderColor: theme.palette.divider,
+      strokeDashArray: 3,
+      xaxis: { lines: { show: true } },
+      yaxis: { lines: { show: true } },
+    },
+    xaxis: {
+      categories: categories,
+      labels: {
+        style: {
+          colors: theme.palette.text.primary,
+          fontSize: '12px',
+          fontWeight: 500,
+        },
       },
-    ];
-  }, [memberCount]);
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: theme.palette.text.primary,
+          fontSize: '12px',
+          fontWeight: 500,
+        },
+      },
+    },
+    tooltip: {
+      theme: 'dark',
+      y: {
+        formatter: (val: number) => `${val?.toLocaleString()}명`,
+      },
+    },
+    legend: {
+      show: true,
+      position: 'top',
+      horizontalAlign: 'right',
+      labels: {
+        colors: theme.palette.text.primary,
+      },
+    },
+  };
+
+  const chartSeries = React.useMemo(
+    () => [
+      {
+        name: '회원수',
+        data: memberCount && memberCount.length > 0 ? memberCount.map((item) => Object.values(item)[0] || 0) : [0],
+      },
+      {
+        name: '오늘 가입한 회원수',
+        data:
+          registerCount && registerCount.length > 0 ? registerCount.map((item) => Object.values(item)[0] || 0) : [0],
+      },
+      {
+        name: '오늘 방문자 수',
+        data: visitedCount && visitedCount.length > 0 ? visitedCount.map((item) => Object.values(item)[0] || 0) : [0],
+      },
+    ],
+    [memberCount, registerCount, visitedCount]
+  );
 
   const handlePeriodChange = (period: MemberDateType): void => {
     setSelectedPeriod(period);
@@ -63,17 +140,17 @@ export function MemberGrowthChart(): React.JSX.Element {
           전체 회원수
         </Typography>
         <Typography variant="h4" component="div">
-          {Object.values(memberCount[memberCount.length - 1] || { 0: 0 })[0].toLocaleString()}명
+          {(latestCount ?? 0).toLocaleString()}명
         </Typography>
         <Typography color="textSecondary" sx={{ mb: 2 }}>
           {selectedPeriod === 'date' ? '지난일에' : selectedPeriod === 'week' ? '지난주에' : '지난달에'}{' '}
-          <strong>{Math.abs(increase).toLocaleString()}명</strong> {increase >= 0 ? '증가했어요.' : '감소했어요.'}
+          <strong>{Math.abs(increase ?? 0).toLocaleString()}명</strong> {increase >= 0 ? '증가했어요.' : '감소했어요.'}
           <Typography
             component="span"
             color={increase >= 0 ? 'success.main' : 'error'}
             sx={{ ml: 1, fontWeight: 'bold' }}
           >
-            {increasePercentage.toFixed(2)}%{' '}
+            {(increasePercentage ?? 0).toFixed(2)}%{' '}
             {increase >= 0 ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
           </Typography>
         </Typography>
@@ -106,79 +183,18 @@ export function MemberGrowthChart(): React.JSX.Element {
             월간
           </Button>
         </ButtonGroup>
-        {loading ? (
+        {memberCountLoading || visitedCountLoading || registerLoading ? (
           <Typography variant="body2" color="textSecondary">
             데이터를 불러오는 중입니다...
           </Typography>
-        ) : error ? (
+        ) : memberCountError || visitedCountError || registerError ? (
           <Typography variant="body2" color="error">
-            {error}
+            데이터를 불러오는 중 오류가 발생했습니다.
           </Typography>
         ) : (
-          <Chart options={chartOptions} series={updatedChartSeries} type="line" height={250} width="100%" />
+          <Chart options={chartOptions} series={chartSeries} type="line" height={350} />
         )}
       </CardContent>
     </Card>
   );
-}
-
-function useChartOptions(memberCount: Record<string, number>[]): ApexOptions {
-  const theme = useTheme();
-
-  return {
-    chart: {
-      background: 'transparent',
-      toolbar: { show: false },
-    },
-    stroke: {
-      curve: 'smooth',
-      width: 2,
-      colors: [theme.palette.primary.main],
-    },
-    markers: {
-      size: 4,
-      colors: [theme.palette.secondary.main],
-      strokeColors: theme.palette.background.paper,
-      strokeWidth: 2,
-    },
-    grid: {
-      borderColor: theme.palette.divider,
-      strokeDashArray: 3,
-      xaxis: { lines: { show: true } },
-      yaxis: { lines: { show: true } },
-    },
-    xaxis: {
-      categories: memberCount.map((item) => Object.keys(item)[0]), // 날짜를 x축에 반영
-      labels: {
-        style: {
-          colors: theme.palette.text.primary,
-          fontSize: '12px',
-          fontWeight: 500,
-        },
-      },
-    },
-    yaxis: {
-      labels: {
-        style: {
-          colors: theme.palette.text.primary,
-          fontSize: '12px',
-          fontWeight: 500,
-        },
-      },
-    },
-    tooltip: {
-      theme: 'dark',
-      y: {
-        formatter: (val: number) => `${val.toLocaleString()}명`,
-      },
-    },
-    legend: {
-      show: true,
-      position: 'top',
-      horizontalAlign: 'right',
-      labels: {
-        colors: theme.palette.text.primary,
-      },
-    },
-  };
 }

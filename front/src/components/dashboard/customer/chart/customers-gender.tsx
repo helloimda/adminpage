@@ -23,9 +23,9 @@ export function CustomersGenderAgeChart(): React.JSX.Element {
 
   React.useEffect(() => {
     if (genderAgeData) {
+      const categories = genderAgeData.map((data) => data.age_group ?? 'Unknown');
       const maleData = genderAgeData.map((data) => data.male ?? 0);
       const femaleData = genderAgeData.map((data) => data.female ?? 0);
-      const categories = genderAgeData.map((data) => data.age_group ?? 'Unknown');
       setChartData({ maleData, femaleData, categories });
     }
   }, [genderAgeData]);
@@ -52,7 +52,7 @@ export function CustomersGenderAgeChart(): React.JSX.Element {
       colors: ['transparent'],
     },
     xaxis: {
-      categories: chartData.categories,
+      categories: chartData.categories.map((category) => category ?? 'Unknown'),
       labels: {
         style: {
           colors: theme.palette.text.primary,
@@ -110,7 +110,7 @@ export function CustomersGenderAgeChart(): React.JSX.Element {
     <Card>
       <CardContent>
         <Typography variant="h6">회원 성별 연령 차트</Typography>
-        <Chart options={chartOptions} series={chartSeries} type="bar" height={350} />
+        <Chart options={chartOptions} series={chartSeries} type="bar" height={350} width="100%" />
       </CardContent>
     </Card>
   );
