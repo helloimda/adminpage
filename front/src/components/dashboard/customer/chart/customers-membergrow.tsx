@@ -11,28 +11,43 @@ import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import type { ApexOptions } from 'apexcharts';
 
-// Chart 컴포넌트를 동적으로 로드
+import type { MemberDateType } from '@/types/customer';
+import { useMembersCountByType } from '@/hooks/use-customer';
+
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-interface MemberGrowthChartProps {
-  totalMembers: number;
-  increase: number;
-  increasePercentage: number;
-  chartSeries: { name: string; data: number[] }[];
-}
+export function MemberGrowthChart(): React.JSX.Element {
+  const [selectedPeriod, setSelectedPeriod] = React.useState<MemberDateType>('date');
+  const { memberCount, loading, error } = useMembersCountByType(selectedPeriod);
 
-export function MemberGrowthChart({
-  totalMembers,
-  increase,
-  increasePercentage,
-  chartSeries,
-}: MemberGrowthChartProps): React.JSX.Element {
-  const [selectedPeriod, setSelectedPeriod] = React.useState<'daily' | 'weekly' | 'monthly'>('daily');
-  const chartOptions = useChartOptions();
+  // 증가량과 퍼센트 계산
+  const { increase, increasePercentage } = React.useMemo(() => {
+    if (memberCount.length < 2) return { increase: 0, increasePercentage: 0 };
 
-  const handlePeriodChange = (period: 'daily' | 'weekly' | 'monthly') => {
+    const latestCount = Object.values(memberCount[0])[0];
+    const previousCount = Object.values(memberCount[1])[0];
+    const increase = latestCount - previousCount;
+    const increasePercentage = previousCount ? (increase / previousCount) * 100 : 0;
+
+    return { increase, increasePercentage };
+  }, [memberCount]);
+
+  const chartOptions = useChartOptions(memberCount);
+
+  const updatedChartSeries = React.useMemo(() => {
+    return [
+      {
+        name: '회원가입 수',
+        data: memberCount.map((item) => {
+          const [_date, count] = Object.entries(item)[0];
+          return count;
+        }),
+      },
+    ];
+  }, [memberCount]);
+
+  const handlePeriodChange = (period: MemberDateType): void => {
     setSelectedPeriod(period);
-    // 차트 데이터를 업데이트하는 로직을 여기에 추가합니다.
   };
 
   return (
@@ -42,50 +57,61 @@ export function MemberGrowthChart({
           전체 회원수
         </Typography>
         <Typography variant="h4" component="div">
-          {totalMembers.toLocaleString()}명
+          {Object.values(memberCount[0] || { 0: 0 })[0].toLocaleString()}명
         </Typography>
         <Typography color="textSecondary" sx={{ mb: 2 }}>
-          지난주에 비해 <strong>{increase.toLocaleString()}명</strong> 증가했어요.
+          {selectedPeriod === 'date' ? '지난일에' : selectedPeriod === 'week' ? '지난주에' : '지난달에'}{' '}
+          <strong>{increase.toLocaleString()}명</strong> 증가했어요.
           <Typography component="span" color="error" sx={{ ml: 1, fontWeight: 'bold' }}>
-            {increasePercentage}% <ArrowUpwardIcon fontSize="small" />
+            {increasePercentage.toFixed(2)}% <ArrowUpwardIcon fontSize="small" />
           </Typography>
         </Typography>
         <ButtonGroup variant="contained" color="primary" sx={{ mb: 2, borderRadius: '8px' }}>
           <Button
             onClick={() => {
-              handlePeriodChange('daily');
+              handlePeriodChange('date');
             }}
-            disabled={selectedPeriod === 'daily'}
-            sx={{ textTransform: 'none', fontWeight: selectedPeriod === 'daily' ? 'bold' : 'normal' }}
+            disabled={selectedPeriod === 'date'}
+            sx={{ textTransform: 'none', fontWeight: selectedPeriod === 'date' ? 'bold' : 'normal' }}
           >
             일간
           </Button>
           <Button
             onClick={() => {
-              handlePeriodChange('weekly');
+              handlePeriodChange('week');
             }}
-            disabled={selectedPeriod === 'weekly'}
-            sx={{ textTransform: 'none', fontWeight: selectedPeriod === 'weekly' ? 'bold' : 'normal' }}
+            disabled={selectedPeriod === 'week'}
+            sx={{ textTransform: 'none', fontWeight: selectedPeriod === 'week' ? 'bold' : 'normal' }}
           >
             주간
           </Button>
           <Button
             onClick={() => {
-              handlePeriodChange('monthly');
+              handlePeriodChange('month');
             }}
-            disabled={selectedPeriod === 'monthly'}
-            sx={{ textTransform: 'none', fontWeight: selectedPeriod === 'monthly' ? 'bold' : 'normal' }}
+            disabled={selectedPeriod === 'month'}
+            sx={{ textTransform: 'none', fontWeight: selectedPeriod === 'month' ? 'bold' : 'normal' }}
           >
             월간
           </Button>
         </ButtonGroup>
-        <Chart options={chartOptions} series={chartSeries} type="line" height={250} width="100%" />
+        {loading ? (
+          <Typography variant="body2" color="textSecondary">
+            데이터를 불러오는 중입니다...
+          </Typography>
+        ) : error ? (
+          <Typography variant="body2" color="error">
+            {error}
+          </Typography>
+        ) : (
+          <Chart options={chartOptions} series={updatedChartSeries} type="line" height={250} width="100%" />
+        )}
       </CardContent>
     </Card>
   );
 }
 
-function useChartOptions(): ApexOptions {
+function useChartOptions(memberCount: Record<string, number>[]): ApexOptions {
   const theme = useTheme();
 
   return {
@@ -111,7 +137,7 @@ function useChartOptions(): ApexOptions {
       yaxis: { lines: { show: true } },
     },
     xaxis: {
-      categories: ['11.14', '11.15', '11.16', '11.17', '11.18', '11.19', '11.20'],
+      categories: memberCount.map((item) => Object.keys(item)[0]), // 날짜를 x축에 반영
       labels: {
         style: {
           colors: theme.palette.text.primary,

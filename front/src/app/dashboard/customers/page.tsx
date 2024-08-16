@@ -113,7 +113,6 @@ export default function Page(): React.JSX.Element {
 
   const paginatedCustomers = applyPagination(customers, page, rowsPerPage);
 
-  const totalMembers = 9627;
   const increase = 198;
   const increasePercentage = 2.1;
   const chartSeries = [
@@ -125,12 +124,7 @@ export default function Page(): React.JSX.Element {
 
   return (
     <Stack spacing={3}>
-      <MemberGrowthChart
-        totalMembers={totalMembers}
-        increase={increase}
-        increasePercentage={increasePercentage}
-        chartSeries={chartSeries}
-      />
+      <MemberGrowthChart increase={increase} increasePercentage={increasePercentage} chartSeries={chartSeries} />
       <CustomerGenderChart male={40} female={3} />
       <Stack direction="row" spacing={3}>
         <Stack spacing={1} sx={{ flex: '1 1 auto' }}>
