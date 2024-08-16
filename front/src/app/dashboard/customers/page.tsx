@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 
 import { config } from '@/config';
-import { CustomerGenderChart } from '@/components/dashboard/customer/chart/customers-gender';
+import { CustomersGenderAgeChart } from '@/components/dashboard/customer/chart/customers-gender';
 import { CustomersStatisticsChart } from '@/components/dashboard/customer/chart/customers-statisticschart';
 import { CustomersFilters } from '@/components/dashboard/customer/customers-filters';
 import { CustomersTable } from '@/components/dashboard/customer/customers-table';
@@ -116,7 +116,7 @@ export default function Page(): React.JSX.Element {
   return (
     <Stack spacing={3}>
       <CustomersStatisticsChart />
-      <CustomerGenderChart male={40} female={3} />
+      <CustomersGenderAgeChart />
       <Stack direction="row" spacing={3}>
         <Stack spacing={1} sx={{ flex: '1 1 auto' }}>
           <Typography variant="h4">Customers</Typography>
@@ -129,7 +129,6 @@ export default function Page(): React.JSX.Element {
         rows={paginatedCustomers}
         rowsPerPage={rowsPerPage}
       />
-
       <Typography variant="h4">Ben Users</Typography>
       <CustomersFilters />
       <CustomersTable

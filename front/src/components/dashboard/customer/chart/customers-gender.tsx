@@ -1,56 +1,117 @@
 'use client';
 
 import * as React from 'react';
-import Button from '@mui/material/Button';
+import dynamic from 'next/dynamic';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import Divider from '@mui/material/Divider';
 import { useTheme } from '@mui/material/styles';
-import type { SxProps } from '@mui/material/styles';
-import { ArrowClockwise as ArrowClockwiseIcon } from '@phosphor-icons/react/dist/ssr/ArrowClockwise';
+import Typography from '@mui/material/Typography';
 import type { ApexOptions } from 'apexcharts';
 
-import { Chart } from '@/components/core/chart';
+import useFetchGenderAge from '@/hooks/use-customer';
 
-export interface CustomerGenderChartProps {
-  male: number;
-  female: number;
-  sx?: SxProps;
-}
+const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-export function CustomerGenderChart({ male, female, sx }: CustomerGenderChartProps): React.JSX.Element {
-  const chartOptions = useChartOptions();
+export function CustomersGenderAgeChart(): React.JSX.Element {
+  const theme = useTheme();
+  const { genderAgeData, loading, error } = useFetchGenderAge();
+  const [chartData, setChartData] = React.useState<{ maleData: number[]; femaleData: number[]; categories: string[] }>({
+    maleData: [],
+    femaleData: [],
+    categories: [],
+  });
 
-  const chartSeries = [male, female];
+  React.useEffect(() => {
+    if (genderAgeData) {
+      const maleData = genderAgeData.map((data) => data.male ?? 0);
+      const femaleData = genderAgeData.map((data) => data.female ?? 0);
+      const categories = genderAgeData.map((data) => data.age_group ?? 'Unknown');
+      setChartData({ maleData, femaleData, categories });
+    }
+  }, [genderAgeData]);
+
+  const chartOptions: ApexOptions = {
+    chart: {
+      type: 'bar',
+      background: 'transparent',
+      toolbar: { show: false },
+    },
+    colors: [theme.palette.primary.main, theme.palette.secondary.main],
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: '55%',
+      },
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      show: true,
+      width: 2,
+      colors: ['transparent'],
+    },
+    xaxis: {
+      categories: chartData.categories,
+      labels: {
+        style: {
+          colors: theme.palette.text.primary,
+        },
+      },
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: theme.palette.text.primary,
+        },
+      },
+    },
+    fill: {
+      opacity: 1,
+    },
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val}%`,
+      },
+    },
+    legend: {
+      position: 'bottom',
+      horizontalAlign: 'center',
+      labels: {
+        colors: theme.palette.text.primary,
+      },
+    },
+  };
+
+  const chartSeries = [
+    {
+      name: '남성',
+      data: chartData.maleData,
+    },
+    {
+      name: '여성',
+      data: chartData.femaleData,
+    },
+  ];
+
+  if (loading) {
+    return <Typography>Loading...</Typography>;
+  }
+
+  if (error) {
+    return <Typography color="error">Error: {error}</Typography>;
+  }
+
+  if (!genderAgeData || genderAgeData.length === 0) {
+    return <Typography>No data available</Typography>;
+  }
 
   return (
-    <Card sx={sx}>
-      <CardHeader
-        action={
-          <Button color="inherit" size="small" startIcon={<ArrowClockwiseIcon fontSize="var(--icon-fontSize-md)" />}>
-            Sync
-          </Button>
-        }
-        title="사용자 성별"
-      />
+    <Card>
       <CardContent>
-        <Chart height={350} options={chartOptions} series={chartSeries} type="pie" width="100%" />
+        <Typography variant="h6">회원 성별 연령 차트</Typography>
+        <Chart options={chartOptions} series={chartSeries} type="bar" height={350} />
       </CardContent>
-      <Divider />
     </Card>
   );
-}
-
-function useChartOptions(): ApexOptions {
-  const theme = useTheme();
-
-  return {
-    chart: { background: 'transparent', toolbar: { show: false } },
-    colors: ['#1E90FF', '#FF69B4'], // 남성, 여성 색상
-    dataLabels: { enabled: true },
-    labels: ['Male', 'Female'],
-    legend: { position: 'bottom' },
-    theme: { mode: theme.palette.mode },
-  };
 }

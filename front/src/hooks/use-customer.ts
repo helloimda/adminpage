@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { getMembersByType, getRegisterMembers, getVisitedMembers } from '@/api/customers';
+import { getGenderAge, getMembersByType, getRegisterMembers, getVisitedMembers } from '@/api/customers';
 
-import type { MemberDateType } from '@/types/customer';
+import type { GenderAgeData, MemberDateType } from '@/types/customer';
 
 function useFetchMembersByType(
   fetchFunction: (type: MemberDateType) => Promise<Record<string, number>[]>,
@@ -57,3 +57,32 @@ export function useMembersRegisterByType(type: MemberDateType): {
 } {
   return useFetchMembersByType(getRegisterMembers, type, '가입자 수를 가져오는 중 오류가 발생했습니다.');
 }
+
+function useFetchGenderAge(): {
+  genderAgeData: GenderAgeData[];
+  loading: boolean;
+  error: string;
+} {
+  const [genderAgeData, setGenderAgeData] = useState<GenderAgeData[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    async function fetchGenderAgeData(): Promise<void> {
+      try {
+        const data = await getGenderAge();
+        setGenderAgeData(data);
+      } catch (err) {
+        setError('성별 및 연령 데이터를 가져오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void fetchGenderAgeData();
+  }, []);
+
+  return { genderAgeData, loading, error };
+}
+
+export default useFetchGenderAge;

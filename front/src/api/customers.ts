@@ -1,4 +1,4 @@
-import type { MemberDateType, MembersByTypeResponse } from '@/types/customer';
+import type { GenderAgeDataResponse, MemberDateType, MembersByTypeResponse } from '@/types/customer';
 import apiClient from '@/lib/api/client';
 
 async function fetchMembersData(endpoint: string, type: MemberDateType): Promise<Record<string, number>[]> {
@@ -16,4 +16,9 @@ export async function getVisitedMembers(type: MemberDateType): Promise<Record<st
 
 export async function getRegisterMembers(type: MemberDateType): Promise<Record<string, number>[]> {
   return fetchMembersData('/analysis/registrations', type);
+}
+
+export async function getGenderAge(): Promise<GenderAgeDataResponse> {
+  const response = await apiClient.get<GenderAgeDataResponse>('/analysis/gender-age-stats');
+  return response.data;
 }
