@@ -22,7 +22,7 @@ export interface CustomerGenderChartProps {
 export function CustomerGenderChart({ male, female, sx }: CustomerGenderChartProps): React.JSX.Element {
   const chartOptions = useChartOptions();
 
-  const chartSeries = [male, female]; // 데이터 시리즈 설정
+  const chartSeries = [male, female];
 
   return (
     <Card sx={sx}>

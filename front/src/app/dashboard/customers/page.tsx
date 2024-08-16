@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 
 import { config } from '@/config';
 import { CustomerGenderChart } from '@/components/dashboard/customer/chart/customers-gender';
-import { MemberGrowthChart } from '@/components/dashboard/customer/chart/customers-membergrow';
+import { CustomersStatisticsChart } from '@/components/dashboard/customer/chart/customers-statisticschart';
 import { CustomersFilters } from '@/components/dashboard/customer/customers-filters';
 import { CustomersTable } from '@/components/dashboard/customer/customers-table';
 import { type Customer } from '@/components/dashboard/customer/customers-type';
@@ -113,18 +113,9 @@ export default function Page(): React.JSX.Element {
 
   const paginatedCustomers = applyPagination(customers, page, rowsPerPage);
 
-  const increase = 198;
-  const increasePercentage = 2.1;
-  const chartSeries = [
-    {
-      name: '회원수',
-      data: [8700, 8900, 9100, 9300, 9400, 9500, 9627], // 각 날짜별 회원수 데이터
-    },
-  ];
-
   return (
     <Stack spacing={3}>
-      <MemberGrowthChart increase={increase} increasePercentage={increasePercentage} chartSeries={chartSeries} />
+      <CustomersStatisticsChart />
       <CustomerGenderChart male={40} female={3} />
       <Stack direction="row" spacing={3}>
         <Stack spacing={1} sx={{ flex: '1 1 auto' }}>

@@ -1,36 +1,13 @@
 import { useEffect, useState } from 'react';
-import { getMembersByType, getTotalMembers } from '@/api/customers';
+import { getMembersByType, getRegisterMembers, getVisitedMembers } from '@/api/customers';
 
 import type { MemberDateType } from '@/types/customer';
 
-export function useTotalMembers(): {
-  totalMembers: number;
-  loading: boolean;
-  error: string;
-} {
-  const [totalMembers, setTotalMembers] = useState<number | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
-
-  useEffect(() => {
-    async function fetchTotalMembers(): Promise<void> {
-      try {
-        const total = await getTotalMembers();
-        setTotalMembers(total);
-      } catch (err) {
-        setError('총 멤버 수를 가져오는 중 오류가 발생했습니다.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    void fetchTotalMembers();
-  }, []);
-
-  return { totalMembers: totalMembers ?? 0, loading, error };
-}
-
-export function useMembersCountByType(type: MemberDateType): {
+function useFetchMembersByType(
+  fetchFunction: (type: MemberDateType) => Promise<Record<string, number>[]>,
+  type: MemberDateType,
+  errorMessage: string
+): {
   memberCount: Record<string, number>[];
   loading: boolean;
   error: string;
@@ -40,19 +17,43 @@ export function useMembersCountByType(type: MemberDateType): {
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    async function fetchMembersByType(): Promise<void> {
+    async function fetchMembers(): Promise<void> {
       try {
-        const data = await getMembersByType(type);
-        setMemberCount(data);
+        const data = await fetchFunction(type);
+        setMemberCount(data.reverse());
       } catch (err) {
-        setError('멤버 데이터를 가져오는 중 오류가 발생했습니다.');
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
     }
 
-    void fetchMembersByType();
-  }, [type]);
+    void fetchMembers();
+  }, [fetchFunction, type, errorMessage]);
 
   return { memberCount, loading, error };
+}
+
+export function useMembersCountByType(type: MemberDateType): {
+  memberCount: Record<string, number>[];
+  loading: boolean;
+  error: string;
+} {
+  return useFetchMembersByType(getMembersByType, type, '총 회원 수를 가져오는 중 오류가 발생했습니다.');
+}
+
+export function useMembersVisitedByType(type: MemberDateType): {
+  memberCount: Record<string, number>[];
+  loading: boolean;
+  error: string;
+} {
+  return useFetchMembersByType(getVisitedMembers, type, '방문자 수를 가져오는 중 오류가 발생했습니다.');
+}
+
+export function useMembersRegisterByType(type: MemberDateType): {
+  memberCount: Record<string, number>[];
+  loading: boolean;
+  error: string;
+} {
+  return useFetchMembersByType(getRegisterMembers, type, '가입자 수를 가져오는 중 오류가 발생했습니다.');
 }

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import dynamic from 'next/dynamic';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -20,14 +21,19 @@ export function MemberGrowthChart(): React.JSX.Element {
   const [selectedPeriod, setSelectedPeriod] = React.useState<MemberDateType>('date');
   const { memberCount, loading, error } = useMembersCountByType(selectedPeriod);
 
-  // 증가량과 퍼센트 계산
   const { increase, increasePercentage } = React.useMemo(() => {
     if (memberCount.length < 2) return { increase: 0, increasePercentage: 0 };
 
-    const latestCount = Object.values(memberCount[0])[0];
-    const previousCount = Object.values(memberCount[1])[0];
+    const latestCount = Object.values(memberCount[memberCount.length - 1])[0];
+    const previousCount = Object.values(memberCount[memberCount.length - 2])[0];
     const increase = latestCount - previousCount;
-    const increasePercentage = previousCount ? (increase / previousCount) * 100 : 0;
+
+    let increasePercentage;
+    if (previousCount === 0) {
+      increasePercentage = latestCount > 0 ? 100 : 0;
+    } else {
+      increasePercentage = (increase / previousCount) * 100;
+    }
 
     return { increase, increasePercentage };
   }, [memberCount]);
@@ -57,13 +63,18 @@ export function MemberGrowthChart(): React.JSX.Element {
           전체 회원수
         </Typography>
         <Typography variant="h4" component="div">
-          {Object.values(memberCount[0] || { 0: 0 })[0].toLocaleString()}명
+          {Object.values(memberCount[memberCount.length - 1] || { 0: 0 })[0].toLocaleString()}명
         </Typography>
         <Typography color="textSecondary" sx={{ mb: 2 }}>
           {selectedPeriod === 'date' ? '지난일에' : selectedPeriod === 'week' ? '지난주에' : '지난달에'}{' '}
-          <strong>{increase.toLocaleString()}명</strong> 증가했어요.
-          <Typography component="span" color="error" sx={{ ml: 1, fontWeight: 'bold' }}>
-            {increasePercentage.toFixed(2)}% <ArrowUpwardIcon fontSize="small" />
+          <strong>{Math.abs(increase).toLocaleString()}명</strong> {increase >= 0 ? '증가했어요.' : '감소했어요.'}
+          <Typography
+            component="span"
+            color={increase >= 0 ? 'success.main' : 'error'}
+            sx={{ ml: 1, fontWeight: 'bold' }}
+          >
+            {increasePercentage.toFixed(2)}%{' '}
+            {increase >= 0 ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
           </Typography>
         </Typography>
         <ButtonGroup variant="contained" color="primary" sx={{ mb: 2, borderRadius: '8px' }}>
