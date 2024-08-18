@@ -8,7 +8,7 @@ import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import type { ApexOptions } from 'apexcharts';
 
-import useFetchGenderAge from '@/hooks/use-customer';
+import { useFetchGenderAge } from '@/hooks/use-customer';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 

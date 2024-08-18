@@ -4,12 +4,10 @@ import * as React from 'react';
 import { Box, Button, Modal, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 
-import type { Customer } from '../customers-type';
-
 interface CustomerModalProps {
+  customer;
   open: boolean;
   onClose: () => void;
-  customer: Customer | null;
 }
 
 export function CustomerModal({ open, onClose, customer }: CustomerModalProps): React.ReactElement | null {
