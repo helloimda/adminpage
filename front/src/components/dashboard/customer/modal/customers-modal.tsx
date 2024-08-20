@@ -1,17 +1,41 @@
 'use client';
 
 import * as React from 'react';
-import { Box, Button, Modal, Typography } from '@mui/material';
-import dayjs from 'dayjs';
+import { Alert, Box, Button, CircularProgress, Modal, TextField, Typography } from '@mui/material';
+
+import { type User } from '@/types/customer';
+import { useDoBen } from '@/hooks/use-customer';
 
 interface CustomerModalProps {
-  customer;
+  user: User | null;
   open: boolean;
   onClose: () => void;
 }
 
-export function CustomerModal({ open, onClose, customer }: CustomerModalProps): React.ReactElement | null {
-  if (!customer) {
+export function CustomerModal({ open, onClose, user }: CustomerModalProps): React.ReactElement | null {
+  const { doBen, loading, error, success } = useDoBen();
+  const [stopInfo, setStopInfo] = React.useState('');
+  const [stopdf, setStopdf] = React.useState('');
+
+  const handleBanClick = async (): Promise<void> => {
+    if (user) {
+      await doBen(user.mem_idx, stopInfo, stopdf);
+    }
+    if (success) {
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+    }
+  };
+
+  React.useEffect(() => {
+    if (success) {
+      setStopInfo('');
+      setStopdf('');
+    }
+  }, [success]);
+
+  if (!user) {
     return null;
   }
 
@@ -20,7 +44,7 @@ export function CustomerModal({ open, onClose, customer }: CustomerModalProps): 
       open={open}
       onClose={onClose}
       BackdropProps={{
-        style: { backgroundColor: 'transparent' },
+        style: { backgroundColor: 'rgba(0, 0, 0, 0.5)' },
       }}
     >
       <Box
@@ -36,21 +60,52 @@ export function CustomerModal({ open, onClose, customer }: CustomerModalProps): 
           p: 4,
         }}
       >
-        <Typography variant="h6" component="h2">
-          {customer.name}
+        <Typography variant="h6" component="h2" gutterBottom>
+          회원 정보
         </Typography>
-        <Typography sx={{ mt: 2 }}>
-          <strong>Email:</strong> {customer.email}
+        <Typography variant="body1">
+          <strong>아이디:</strong> {user.mem_id}
         </Typography>
-        <Typography sx={{ mt: 2 }}>
-          <strong>Location:</strong> {customer.address.city}, {customer.address.state}, {customer.address.country}
+        <Typography variant="body1" sx={{ mt: 1 }}>
+          <strong>닉네임:</strong> {user.mem_nick}
         </Typography>
-        <Typography sx={{ mt: 2 }}>
-          <strong>Phone:</strong> {customer.phone}
-        </Typography>
-        <Typography sx={{ mt: 2 }}>
-          <strong>Signed Up:</strong> {dayjs(customer.createdAt).format('MMM D, YYYY')}
-        </Typography>
+
+        <TextField
+          fullWidth
+          label="정지 사유"
+          value={stopInfo}
+          onChange={(e) => {
+            setStopInfo(e.target.value);
+          }}
+          sx={{ mt: 3 }}
+          multiline
+          rows={3}
+        />
+
+        <TextField
+          fullWidth
+          label="정지 해제 기한"
+          type="date"
+          value={stopdf}
+          onChange={(e) => {
+            setStopdf(e.target.value);
+          }}
+          sx={{ mt: 2 }}
+          InputLabelProps={{
+            shrink: true,
+          }}
+        />
+
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert severity="success" sx={{ mt: 2 }}>
+            회원 정지가 완료되었습니다.
+          </Alert>
+        )}
 
         <Box
           sx={{
@@ -62,11 +117,13 @@ export function CustomerModal({ open, onClose, customer }: CustomerModalProps): 
           <Button
             variant="contained"
             color="error"
+            onClick={handleBanClick}
+            disabled={loading || success || false}
             sx={{
               alignSelf: 'flex-end',
             }}
           >
-            회원 정지
+            {loading ? <CircularProgress size={24} /> : '회원 정지'}
           </Button>
         </Box>
       </Box>

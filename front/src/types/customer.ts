@@ -4,12 +4,11 @@ export interface User {
   mem_nick: string | null;
   mem_hp: string | null;
   mem_profile_url?: string;
-}
-
-export interface BenUser extends User {
   stop_info: string;
   stopdt: string;
 }
+
+export interface BenUser extends User {}
 
 export interface GenderAgeData {
   age_group: string;
@@ -35,6 +34,11 @@ export interface MembersByTypeResponse {
 }
 
 export type GenderAgeDataResponse = GenderAgeData[];
+
+export interface UserListResponse {
+  data: User[];
+  pagination: Pagination;
+}
 
 export interface BenListResponse {
   data: BenUser[];

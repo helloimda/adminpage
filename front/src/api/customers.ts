@@ -5,6 +5,7 @@ import type {
   GenderAgeDataResponse,
   MemberDateType,
   MembersByTypeResponse,
+  UserListResponse,
 } from '@/types/customer';
 import apiClient from '@/lib/api/client';
 
@@ -33,13 +34,46 @@ export async function getGenderAge(): Promise<GenderAgeDataResponse> {
   return fetchData<GenderAgeDataResponse>('/analysis/gender-age-stats');
 }
 
+export async function getUserList(page: number): Promise<UserListResponse> {
+  const response = await apiClient.get<UserListResponse>(`/members/${page}`);
+  return response.data;
+}
+
+export async function searchIdUserList(id: string, page: number): Promise<UserListResponse> {
+  if (id === '') return Promise.resolve({} as UserListResponse);
+  const response = await apiClient.get<UserListResponse>(`/members/search/id/${id}/${page}`);
+  return response.data;
+}
+
+export async function searchNickUserList(nick: string, page: number): Promise<UserListResponse> {
+  if (nick === '') return Promise.resolve({} as UserListResponse);
+  const response = await apiClient.get<UserListResponse>(`/members/search/nick/${nick}/${page}`);
+  return response.data;
+}
+
 export async function getBenUserList(page: number): Promise<BenListResponse> {
   const response = await apiClient.get<BenListResponse>(`/users/banuser/${page}`);
   return response.data;
 }
 
-export async function postDoBen(memId: number): Promise<DoBenResponse> {
-  const response = await apiClient.post<DoBenResponse>(`/users/banuser/${memId}`);
+export async function searchIdBenUserList(id: string, page: number): Promise<UserListResponse> {
+  if (id === '') return Promise.resolve({} as UserListResponse);
+  const response = await apiClient.get<UserListResponse>(`/users/search/id/${id}/${page}`);
+  return response.data;
+}
+
+export async function searchNickBenUserList(nick: string, page: number): Promise<UserListResponse> {
+  if (nick === '') return Promise.resolve({} as UserListResponse);
+  const response = await apiClient.get<UserListResponse>(`/users/search/nick/${nick}/${page}`);
+  return response.data;
+}
+
+export async function postDoBen(memId: number, stopInfo: string, stopdt: string): Promise<DoBenResponse> {
+  if (stopInfo === '' || stopdt === '') return Promise.resolve({} as DoBenResponse);
+  const response = await apiClient.post<DoBenResponse>(`/users/ban/${memId}`, {
+    stop_info: stopInfo,
+    stopdt,
+  });
   return response.data;
 }
 
