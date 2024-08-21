@@ -5,6 +5,7 @@ import type {
   GenderAgeDataResponse,
   MemberDateType,
   MembersByTypeResponse,
+  UserDeleteReponse,
   UserListResponse,
 } from '@/types/customer';
 import apiClient from '@/lib/api/client';
@@ -79,5 +80,10 @@ export async function postDoBen(memId: number, stopInfo: string, stopdt: string)
 
 export async function postDoUnBen(memId: number): Promise<DoUnBenResponse> {
   const response = await apiClient.post<DoUnBenResponse>(`/users/unban/${memId}`);
+  return response.data;
+}
+
+export async function deleteUser(memIdx: number): Promise<UserDeleteReponse> {
+  const response = await apiClient.post<UserDeleteReponse>(`/users/delete/${memIdx}`);
   return response.data;
 }

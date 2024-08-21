@@ -5,7 +5,7 @@ export interface User {
   mem_hp: string | null;
   mem_profile_url?: string;
   stop_info: string;
-  stopdt: string;
+  stopdt: string | null;
 }
 
 export interface BenUser extends User {}
@@ -52,5 +52,9 @@ export interface DoBenResponse {
 
 export interface DoUnBenResponse {
   success: boolean;
+  message: string;
+}
+
+export interface UserDeleteReponse {
   message: string;
 }

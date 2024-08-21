@@ -20,26 +20,26 @@ import dayjs from 'dayjs';
 
 import 'dayjs/locale/ko';
 
-import { TableHead } from '@mui/material';
+import { Button, TableHead } from '@mui/material';
 
 import { type User } from '@/types/customer';
-import { createLogger } from '@/lib/logger';
-import { useFetchIdUserList, useFetchNickUserList, useFetchUserList } from '@/hooks/use-customer';
+import { useDeleteUser, useFetchIdUserList, useFetchNickUserList, useFetchUserList } from '@/hooks/use-customer';
 import { useSelection } from '@/hooks/use-selection';
 
 import { CustomersFilters } from '../customers-filters';
-import { BenCustomerModal } from '../modal/benuser-modal'; // BenUserModal 가져오기
+import { BenCustomerModal } from '../modal/benuser-modal';
 import { CustomerModal } from '../modal/customers-modal';
-
-const logger = createLogger({ prefix: 'CustomersTable', level: 'DEBUG' });
 
 dayjs.locale('ko');
 
 export function CustomersTable(): React.JSX.Element {
   const [selectedCustomer, setSelectedCustomer] = React.useState<User | null>(null);
-  const [_selectedBenUser, setSelectedBenUser] = React.useState<User | null>(null); // BenUser와 CustomerModal을 구분하기 위한 상태
+  const [_selectedBenUser, setSelectedBenUser] = React.useState<User | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [currentPage, setCurrentPage] = React.useState(0);
+  const { doDeleteUser, loading: deleteLoading } = useDeleteUser();
+
+  const [usersState, setUsersState] = React.useState<User[]>([]); // usersState 추가
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchType, setSearchType] = React.useState<'id' | 'nickname'>('id');
@@ -86,27 +86,19 @@ export function CustomersTable(): React.JSX.Element {
     return defaultUsers;
   }, [idUsers, nickUsers, defaultUsers, searchQuery, searchType]);
 
-  const previousUsers = React.useRef<User[] | null>(null);
-
   React.useEffect(() => {
     if (!loading && users) {
-      previousUsers.current = users;
+      setUsersState(users || []); // 데이터를 가져온 후 usersState 업데이트
     }
   }, [users, loading]);
 
-  React.useEffect(() => {
-    logger.debug('Users:', users);
-    logger.debug('UsersLoading:', loading);
-    logger.debug('UserError:', error);
-  }, [users, loading, error]);
-
   const { selectAll, deselectAll, selectOne, deselectOne, selected } = useSelection(
-    React.useMemo(() => (Array.isArray(users) ? users.map((user) => user.mem_id) : []), [users])
+    React.useMemo(() => (Array.isArray(usersState) ? usersState.map((user) => user.mem_idx) : []), [usersState])
   );
 
   const filteredUsers = React.useMemo(() => {
-    if (!users) return [];
-    return users.filter((user) => {
+    if (!usersState) return [];
+    return usersState.filter((user) => {
       if (searchType === 'id') {
         return user.mem_id.toLowerCase().includes(searchQuery.toLowerCase());
       } else if (searchType === 'nickname') {
@@ -114,7 +106,11 @@ export function CustomersTable(): React.JSX.Element {
       }
       return true;
     });
-  }, [users, searchQuery, searchType]);
+  }, [usersState, searchQuery, searchType]);
+
+  const handleUserUpdate = (updatedUser: User) => {
+    setUsersState((prevUsers) => prevUsers.map((user) => (user.mem_id === updatedUser.mem_id ? updatedUser : user)));
+  };
 
   const selectedSome = (selected?.size ?? 0) > 0 && (selected?.size ?? 0) < (filteredUsers?.length || 1);
   const selectedAll = (filteredUsers?.length || 0) > 0 && selected?.size === filteredUsers?.length;
@@ -145,7 +141,18 @@ export function CustomersTable(): React.JSX.Element {
     setSelectedBenUser(null);
   };
 
-  if (loading && !previousUsers.current) {
+  const handleDeleteUsers = async (): Promise<void> => {
+    const selectedIds = Array.from(selected).map(Number); // selectedIds를 숫자 배열로 변환
+    await Promise.all(
+      selectedIds.map(async (memIdx) => {
+        await doDeleteUser(memIdx); // 숫자 memIdx로 삭제 수행
+      })
+    );
+    setUsersState((prevUsers) => prevUsers.filter((user) => !selectedIds.includes(user.mem_idx)));
+    deselectAll(); // 모든 선택된 항목 해제
+  };
+
+  if (loading && !usersState.length) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
         <CircularProgress />
@@ -166,6 +173,15 @@ export function CustomersTable(): React.JSX.Element {
           onSearchQueryChange={setSearchQuery}
           onSearchTypeChange={setSearchType}
         />
+        <Button
+          variant="contained"
+          color="error"
+          onClick={handleDeleteUsers}
+          disabled={selected?.size === 0 || deleteLoading}
+          sx={{ ml: 2 }}
+        >
+          {deleteLoading ? <CircularProgress size={24} /> : '계정 삭제'}
+        </Button>
       </Box>
 
       <Box sx={{ overflowX: 'auto' }}>
@@ -192,7 +208,7 @@ export function CustomersTable(): React.JSX.Element {
             </TableRow>
           </TableHead>
           <TableBody>
-            {loading && !previousUsers.current
+            {loading && !usersState.length
               ? Array.from(new Array(10)).map((_, index) => (
                   <TableRow key={`skeleton-${index}`}>
                     <TableCell>
@@ -210,7 +226,7 @@ export function CustomersTable(): React.JSX.Element {
                   </TableRow>
                 ))
               : filteredUsers?.map((row) => {
-                  const isSelected = selected?.has(row.mem_id);
+                  const isSelected = selected?.has(row.mem_idx);
 
                   return (
                     <TableRow
@@ -226,9 +242,9 @@ export function CustomersTable(): React.JSX.Element {
                           checked={isSelected}
                           onChange={(event) => {
                             if (event.target.checked) {
-                              selectOne(row.mem_id);
+                              selectOne(row.mem_idx);
                             } else {
-                              deselectOne(row.mem_id);
+                              deselectOne(row.mem_idx);
                             }
                           }}
                         />
@@ -241,7 +257,9 @@ export function CustomersTable(): React.JSX.Element {
                       </TableCell>
                       <TableCell>{row.mem_nick}</TableCell>
                       <TableCell>{row.mem_hp}</TableCell>
-                      <TableCell align="left">{row.stopdt ? <CancelIcon color="error" /> : <></>}</TableCell>{' '}
+                      <TableCell align="left">
+                        {row.stopdt !== null ? <CancelIcon color="error" /> : null}
+                      </TableCell>{' '}
                     </TableRow>
                   );
                 })}
@@ -260,11 +278,21 @@ export function CustomersTable(): React.JSX.Element {
       />
 
       {selectedCustomer !== null && (
-        <CustomerModal user={selectedCustomer} open={modalOpen} onClose={handleCloseModal} />
+        <CustomerModal
+          user={selectedCustomer}
+          open={modalOpen}
+          onClose={handleCloseModal}
+          onUpdate={handleUserUpdate}
+        />
       )}
 
       {_selectedBenUser !== null && (
-        <BenCustomerModal benUser={_selectedBenUser} open={modalOpen} onClose={handleCloseModal} />
+        <BenCustomerModal
+          benUser={_selectedBenUser}
+          open={modalOpen}
+          onClose={handleCloseModal}
+          onUpdate={handleUserUpdate} // 업데이트 핸들러 전달
+        />
       )}
     </Card>
   );

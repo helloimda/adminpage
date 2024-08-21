@@ -23,14 +23,11 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
 
 import { type BenUser } from '@/types/customer';
-import { createLogger } from '@/lib/logger';
 import { useDoUnBen, useFetchBenList, useFetchIdBenUserList, useFetchNickBenUserList } from '@/hooks/use-customer';
 import { useSelection } from '@/hooks/use-selection';
 
 import { CustomersFilters } from '../customers-filters';
 import { BenCustomerModal } from '../modal/benuser-modal';
-
-const logger = createLogger({ prefix: 'CustomersBenTable', level: 'DEBUG' });
 
 dayjs.locale('ko');
 
@@ -40,13 +37,12 @@ export function CustomersBenTable(): React.JSX.Element {
   const [currentPage, setCurrentPage] = React.useState(0);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchType, setSearchType] = React.useState<'id' | 'nickname'>('id');
+  const [usersState, setUsersState] = React.useState<BenUser[]>([]); // 사용자를 저장할 상태 추가
 
-  // Fetch hooks
   const defaultFetch = useFetchBenList(currentPage + 1);
   const idFetch = useFetchIdBenUserList(searchQuery, currentPage + 1);
   const nickFetch = useFetchNickBenUserList(searchQuery, currentPage + 1);
 
-  // Select appropriate fetch result based on search type
   const { benUsers, loading, totalPages } = React.useMemo(() => {
     if (searchQuery) {
       if (searchType === 'id') {
@@ -58,7 +54,12 @@ export function CustomersBenTable(): React.JSX.Element {
     return defaultFetch;
   }, [searchQuery, searchType, defaultFetch, idFetch, nickFetch]);
 
-  // Store previous state
+  React.useEffect(() => {
+    if (!loading && benUsers) {
+      setUsersState(benUsers || []); // 데이터를 가져온 후 usersState 업데이트
+    }
+  }, [benUsers, loading]);
+
   const previousBenUsers = React.useRef<BenUser[] | null>(null);
 
   React.useEffect(() => {
@@ -67,23 +68,15 @@ export function CustomersBenTable(): React.JSX.Element {
     }
   }, [benUsers, loading]);
 
-  // Debugging purpose logs
-  React.useEffect(() => {
-    logger.debug('searchQuery:', searchQuery);
-    logger.debug('searchType:', searchType);
-    logger.debug('benUsers:', benUsers);
-    logger.debug('loading:', loading);
-    logger.debug('error:', error);
-  }, [benUsers, loading, searchQuery, searchType]);
   const { doUnBen, error } = useDoUnBen();
 
   const { selectAll, deselectAll, selectOne, deselectOne, selected } = useSelection(
-    React.useMemo(() => (Array.isArray(benUsers) ? benUsers.map((user) => user.mem_idx) : []), [benUsers])
+    React.useMemo(() => (Array.isArray(usersState) ? usersState.map((user) => user.mem_idx) : []), [usersState])
   );
 
   const filteredBenUsers = React.useMemo(() => {
-    if (!benUsers) return [];
-    return benUsers.filter((user) => {
+    if (!usersState) return [];
+    return usersState.filter((user) => {
       if (searchType === 'id') {
         return user.mem_id.toLowerCase().includes(searchQuery.toLowerCase());
       } else if (searchType === 'nickname') {
@@ -91,7 +84,11 @@ export function CustomersBenTable(): React.JSX.Element {
       }
       return true;
     });
-  }, [benUsers, searchQuery, searchType]);
+  }, [usersState, searchQuery, searchType]);
+
+  const handleUserRemove = (removedUser: BenUser): void => {
+    setUsersState((prevUsers) => prevUsers.filter((user) => user.mem_idx !== removedUser.mem_idx));
+  };
 
   const selectedSome = (selected?.size ?? 0) > 0 && (selected?.size ?? 0) < (filteredBenUsers?.length || 1);
   const selectedAll = (filteredBenUsers?.length || 0) > 0 && selected?.size === filteredBenUsers?.length;
@@ -124,6 +121,7 @@ export function CustomersBenTable(): React.JSX.Element {
     await Promise.all(selectedIds.map((memIdx) => doUnBen(memIdx)));
     setModalOpen(false);
     deselectAll();
+    setUsersState((prevUsers) => prevUsers.filter((user) => !selectedIds.includes(user.mem_idx)));
   };
 
   if (loading && !previousBenUsers.current) {
@@ -259,7 +257,14 @@ export function CustomersBenTable(): React.JSX.Element {
         rowsPerPageOptions={[]}
       />
 
-      <BenCustomerModal benUser={_selectedCustomer} open={modalOpen} onClose={handleCloseModal} />
+      {modalOpen && _selectedCustomer && (
+        <BenCustomerModal
+          benUser={_selectedCustomer}
+          open={modalOpen}
+          onClose={handleCloseModal}
+          onUpdate={handleUserRemove}
+        />
+      )}
     </Card>
   );
 }

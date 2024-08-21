@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  deleteUser,
   getBenUserList,
   getGenderAge,
   getMembersByType,
@@ -14,9 +15,16 @@ import {
   searchNickUserList,
 } from '@/api/customers';
 
-import type { BenUser, DoBenResponse, DoUnBenResponse, GenderAgeData, MemberDateType, User } from '@/types/customer';
+import type {
+  BenUser,
+  DoBenResponse,
+  DoUnBenResponse,
+  GenderAgeData,
+  MemberDateType,
+  User,
+  UserDeleteReponse,
+} from '@/types/customer';
 
-// useFetch 훅 수정 - 두 개의 인수를 받을 수 있도록
 function useFetch<T, A1, A2>(
   fetchFunction: (arg1: A1, arg2: A2) => Promise<T>,
   errorMessage: string,
@@ -60,7 +68,8 @@ export function useMembersCountByType(type: MemberDateType): {
     type,
     undefined
   );
-  return { memberCount: data || [], loading, error };
+  const reversedData = data ? [...data].reverse() : [];
+  return { memberCount: reversedData || [], loading, error };
 }
 
 export function useMembersVisitedByType(type: MemberDateType): {
@@ -74,7 +83,8 @@ export function useMembersVisitedByType(type: MemberDateType): {
     type,
     undefined
   );
-  return { memberCount: data || [], loading, error };
+  const reversedData = data ? [...data].reverse() : [];
+  return { memberCount: reversedData || [], loading, error };
 }
 
 export function useMembersRegisterByType(type: MemberDateType): {
@@ -88,7 +98,8 @@ export function useMembersRegisterByType(type: MemberDateType): {
     type,
     undefined
   );
-  return { memberCount: data || [], loading, error };
+  const reversedData = data ? [...data].reverse() : [];
+  return { memberCount: reversedData || [], loading, error };
 }
 
 export function useFetchGenderAge(): {
@@ -347,4 +358,32 @@ export function useFetchNickBenUserList(
     error,
     totalPages: data?.pagination?.totalPages || 0,
   };
+}
+
+export function useDeleteUser(): {
+  doDeleteUser: (memIdx: number) => Promise<void>;
+  loading: boolean;
+  error: string | null;
+} {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const doDeleteUser = async (memIdx: number): Promise<void> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response: UserDeleteReponse = await deleteUser(memIdx);
+
+      if (response.message !== '회원이 성공적으로 삭제되었습니다.') {
+        setError(response.message || '사용자 삭제 작업이 실패했습니다.');
+      }
+    } catch (err) {
+      setError('사용자 삭제 작업 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { doDeleteUser, loading, error };
 }

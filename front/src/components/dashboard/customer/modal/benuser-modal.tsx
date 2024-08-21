@@ -5,17 +5,18 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Alert, Box, Button, CircularProgress, IconButton, Modal, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 
-import { type BenUser } from '@/types/customer';
+import { type BenUser, type User } from '@/types/customer';
 import { useDoUnBen } from '@/hooks/use-customer';
 
 interface CustomerModalProps {
   benUser: BenUser | null;
   open: boolean;
   onClose: () => void;
+  onUpdate: (updatedUser: User) => void;
 }
 
-export function BenCustomerModal({ open, onClose, benUser }: CustomerModalProps): React.ReactElement | null {
-  const { doUnBen, loading, error, success } = useDoUnBen(); // useDoUnBen 훅을 사용합니다.
+export function BenCustomerModal({ open, onClose, benUser, onUpdate }: CustomerModalProps): React.ReactElement | null {
+  const { doUnBen, loading, error, success } = useDoUnBen();
 
   if (!benUser) {
     return null;
@@ -23,9 +24,8 @@ export function BenCustomerModal({ open, onClose, benUser }: CustomerModalProps)
 
   const handleUnBen = async (): Promise<void> => {
     await doUnBen(benUser.mem_idx);
-    if (success) {
-      onClose(); // 성공적으로 정지 해제 후 모달을 닫습니다.
-    }
+    const updatedUser: User = { ...benUser, stopdt: null };
+    onUpdate(updatedUser);
   };
 
   return (
@@ -62,12 +62,12 @@ export function BenCustomerModal({ open, onClose, benUser }: CustomerModalProps)
           <strong>정지 해제일:</strong> {dayjs(benUser.stopdt).format('YYYY년 M월 D일')}
         </Typography>
 
-        {error && (
+        {error !== null && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error}
           </Alert>
         )}
-        {success && (
+        {success !== null && (
           <Alert severity="success" sx={{ mt: 2 }}>
             정지 해제가 완료되었습니다.
           </Alert>

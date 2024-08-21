@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Alert, Box, Button, CircularProgress, Modal, TextField, Typography } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import { Alert, Box, Button, CircularProgress, IconButton, Modal, TextField, Typography } from '@mui/material';
 
 import { type User } from '@/types/customer';
 import { useDoBen } from '@/hooks/use-customer';
@@ -10,9 +11,10 @@ interface CustomerModalProps {
   user: User | null;
   open: boolean;
   onClose: () => void;
+  onUpdate: (updatedUser: User) => void;
 }
 
-export function CustomerModal({ open, onClose, user }: CustomerModalProps): React.ReactElement | null {
+export function CustomerModal({ open, onClose, user, onUpdate }: CustomerModalProps): React.ReactElement | null {
   const { doBen, loading, error, success } = useDoBen();
   const [stopInfo, setStopInfo] = React.useState('');
   const [stopdf, setStopdf] = React.useState('');
@@ -20,11 +22,8 @@ export function CustomerModal({ open, onClose, user }: CustomerModalProps): Reac
   const handleBanClick = async (): Promise<void> => {
     if (user) {
       await doBen(user.mem_idx, stopInfo, stopdf);
-    }
-    if (success) {
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+      const updatedUser = { ...user, stopdt: stopdf };
+      onUpdate(updatedUser);
     }
   };
 
@@ -33,20 +32,14 @@ export function CustomerModal({ open, onClose, user }: CustomerModalProps): Reac
       setStopInfo('');
       setStopdf('');
     }
-  }, [success]);
+  }, [success, onClose]);
 
   if (!user) {
     return null;
   }
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      BackdropProps={{
-        style: { backgroundColor: 'rgba(0, 0, 0, 0.5)' },
-      }}
-    >
+    <Modal open={open} onClose={onClose} BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.5)' } }}>
       <Box
         sx={{
           position: 'absolute',
@@ -60,6 +53,9 @@ export function CustomerModal({ open, onClose, user }: CustomerModalProps): Reac
           p: 4,
         }}
       >
+        <IconButton onClick={onClose} sx={{ color: 'grey.500', position: 'absolute', right: 8, top: 8 }}>
+          <CloseIcon />
+        </IconButton>
         <Typography variant="h6" component="h2" gutterBottom>
           회원 정보
         </Typography>
@@ -91,9 +87,7 @@ export function CustomerModal({ open, onClose, user }: CustomerModalProps): Reac
             setStopdf(e.target.value);
           }}
           sx={{ mt: 2 }}
-          InputLabelProps={{
-            shrink: true,
-          }}
+          InputLabelProps={{ shrink: true }}
         />
 
         {error && (
@@ -114,14 +108,15 @@ export function CustomerModal({ open, onClose, user }: CustomerModalProps): Reac
             mt: 3,
           }}
         >
+          <Button variant="outlined" color="primary" onClick={onClose} sx={{ mr: 2 }} disabled={loading}>
+            취소
+          </Button>
           <Button
             variant="contained"
             color="error"
             onClick={handleBanClick}
             disabled={loading || success || false}
-            sx={{
-              alignSelf: 'flex-end',
-            }}
+            sx={{ alignSelf: 'flex-end' }}
           >
             {loading ? <CircularProgress size={24} /> : '회원 정지'}
           </Button>
