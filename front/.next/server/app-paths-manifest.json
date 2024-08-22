@@ -1,4 +1,6 @@
 {
+  "/dashboard/generalboard/page": "app/dashboard/generalboard/page.js",
   "/dashboard/customers/page": "app/dashboard/customers/page.js",
+  "/dashboard/generalboard/[id]/page": "app/dashboard/generalboard/[id]/page.js",
   "/dashboard/page": "app/dashboard/page.js"
 }

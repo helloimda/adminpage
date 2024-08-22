@@ -88,7 +88,7 @@ export function CustomersTable(): React.JSX.Element {
 
   React.useEffect(() => {
     if (!loading && users) {
-      setUsersState(users || []); // 데이터를 가져온 후 usersState 업데이트
+      setUsersState(users || []);
     }
   }, [users, loading]);
 
@@ -108,7 +108,7 @@ export function CustomersTable(): React.JSX.Element {
     });
   }, [usersState, searchQuery, searchType]);
 
-  const handleUserUpdate = (updatedUser: User) => {
+  const handleUserUpdate = (updatedUser: User): void => {
     setUsersState((prevUsers) => prevUsers.map((user) => (user.mem_id === updatedUser.mem_id ? updatedUser : user)));
   };
 
@@ -142,14 +142,14 @@ export function CustomersTable(): React.JSX.Element {
   };
 
   const handleDeleteUsers = async (): Promise<void> => {
-    const selectedIds = Array.from(selected).map(Number); // selectedIds를 숫자 배열로 변환
+    const selectedIds = Array.from(selected).map(Number);
     await Promise.all(
       selectedIds.map(async (memIdx) => {
-        await doDeleteUser(memIdx); // 숫자 memIdx로 삭제 수행
+        await doDeleteUser(memIdx);
       })
     );
     setUsersState((prevUsers) => prevUsers.filter((user) => !selectedIds.includes(user.mem_idx)));
-    deselectAll(); // 모든 선택된 항목 해제
+    deselectAll();
   };
 
   if (loading && !usersState.length) {
@@ -291,7 +291,7 @@ export function CustomersTable(): React.JSX.Element {
           benUser={_selectedBenUser}
           open={modalOpen}
           onClose={handleCloseModal}
-          onUpdate={handleUserUpdate} // 업데이트 핸들러 전달
+          onUpdate={handleUserUpdate}
         />
       )}
     </Card>

@@ -1,3 +1,5 @@
+import { type Pagination } from './common';
+
 export interface User {
   mem_idx: number;
   mem_id: string;
@@ -14,13 +16,6 @@ export interface GenderAgeData {
   age_group: string;
   male: number;
   female: number;
-}
-
-export interface Pagination {
-  previousPage: number;
-  nextPage: number;
-  currentPage: number;
-  totalPages: number;
 }
 
 export type MemberDateType = 'date' | 'week' | 'month';
