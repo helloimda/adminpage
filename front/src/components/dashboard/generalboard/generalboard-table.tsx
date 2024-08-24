@@ -30,10 +30,10 @@ import { GeneralBoardFilters } from './generalboard-filters';
 export function GeneralBoardTable(): React.JSX.Element {
   const [searchType, setSearchType] = React.useState<GeneralBoardSearchType>('subject');
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [currentPage, setCurrentPage] = React.useState(1);
+  const [currentPage, setCurrentPage] = React.useState(0);
   const rowsPerPage = 10;
 
-  const router = useRouter(); // useRouter 훅 사용
+  const router = useRouter();
 
   // 게시글 목록을 가져오는 훅
   const { data, loading, setData } = useFetchBoardData(searchQuery, searchType, currentPage);
@@ -42,7 +42,6 @@ export function GeneralBoardTable(): React.JSX.Element {
   const boIdxArray = React.useMemo(() => data?.data.map((row) => row.bo_idx) || [], [data]);
   const { selectAll, deselectAll, selectOne, deselectOne, selected } = useSelection(boIdxArray);
 
-  // 게시글 삭제 훅
   const { doDeleteBoard, loading: deleteLoading } = useDeleteGeneralBoard();
 
   const handleDeleteBoards = async (): Promise<void> => {

@@ -2,6 +2,7 @@ import type {
   DeleteGeneralBoardResponse,
   GeneralBoardDetailResponse,
   GeneralBoardListResponse,
+  PostCategoryListResponse,
 } from '@/types/board/general';
 import apiClient from '@/lib/api/client';
 
@@ -37,5 +38,11 @@ export async function searchGeneralBoardByContent(id: string, page = 1): Promise
 // 닉네임으로 검색
 export async function searchGeneralBoardByNick(id: string, page = 1): Promise<GeneralBoardListResponse> {
   const response = await apiClient.get<GeneralBoardListResponse>(`/postmanage/general/search/nick/${id}/${page}`);
+  return response.data;
+}
+
+//통계
+export async function fetchPostCategoriesByDate(date: string): Promise<PostCategoryListResponse> {
+  const response = await apiClient.get<PostCategoryListResponse>(`/analysis/postscategory/${date}`);
   return response.data;
 }

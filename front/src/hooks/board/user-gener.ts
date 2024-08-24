@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   deleteGeneralBoard,
+  fetchPostCategoriesByDate,
   getGeneralBoardDetail,
   getGeneralBoardList,
   searchGeneralBoardByContent,
@@ -13,6 +14,7 @@ import type {
   GeneralBoardDetailResponse,
   GeneralBoardListResponse,
   GeneralBoardSearchType,
+  PostCategoryListResponse,
 } from '@/types/board/general';
 
 function useFetch<T, A1, A2>(
@@ -180,4 +182,17 @@ export function useFetchBoardData(
   }, [searchQuery, searchType, currentPage]);
 
   return { data, loading, error, setData };
+}
+
+export function usePostCategoriesByDate(date: string): {
+  data: PostCategoryListResponse | null;
+  loading: boolean;
+  error: string;
+} {
+  return useFetch(
+    fetchPostCategoriesByDate,
+    '포스트 카테고리 데이터를 가져오는 중 오류가 발생했습니다.',
+    date,
+    undefined
+  );
 }

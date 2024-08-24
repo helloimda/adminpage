@@ -58,3 +58,11 @@ export interface DeleteGeneralBoardResponse {
 }
 
 export type GeneralBoardSearchType = 'subject' | 'content' | 'nickname';
+
+export interface PostCategory {
+  ca_idx: number; // 카테고리 ID
+  cd_subtag: string | null; // 서브태그 (null일 수 있음)
+  count: number; // 해당 카테고리의 포스트 수
+}
+
+export type PostCategoryListResponse = PostCategory[];
