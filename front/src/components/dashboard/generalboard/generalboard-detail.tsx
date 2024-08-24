@@ -136,7 +136,7 @@ export default function GeneralBoardDetailPage(): React.JSX.Element {
           </Grid>
 
           <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            {deleteError && (
+            {deleteError !== null && (
               <Typography variant="body2" color="error">
                 {deleteError}
               </Typography>

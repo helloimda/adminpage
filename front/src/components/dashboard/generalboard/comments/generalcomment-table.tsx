@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { GeneralCommentSearchType } from '@/api/board/general';
+import type { GeneralCommentSearchType } from '@/api/board/general';
 import {
   Avatar,
   Box,
