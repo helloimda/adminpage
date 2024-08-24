@@ -6,7 +6,8 @@ export const paths = {
     account: '/dashboard/account',
     customers: '/dashboard/customers',
     generalboard: '/dashboard/generalboard',
-    settings: '/dashboard/noticesboard',
+    noticesboard: '/dashboard/noticesboard',
+    fraudboard: '/dashboard/fraudboard',
   },
   errors: { notFound: '/errors/not-found' },
 } as const;

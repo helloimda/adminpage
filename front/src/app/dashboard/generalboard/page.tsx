@@ -9,9 +9,11 @@ import { GeneralBoardTable } from '@/components/dashboard/generalboard/generalbo
 export const metadata = { title: `Account | Dashboard | ${config.site.name}` } satisfies Metadata;
 
 export default function Page(): React.JSX.Element {
+  const today = new Date().toISOString().split('T')[0];
+
   return (
     <Stack spacing={3}>
-      <GeneralBoardCategoryDountChart date={'2024-07-16'} />
+      <GeneralBoardCategoryDountChart date={today} />
       <GeneralBoardTable />
     </Stack>
   );

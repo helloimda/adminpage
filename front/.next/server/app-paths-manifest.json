@@ -1,7 +1,9 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/dashboard/noticesboard/page": "app/dashboard/noticesboard/page.js",
+  "/dashboard/generalboard/page": "app/dashboard/generalboard/page.js",
   "/dashboard/customers/page": "app/dashboard/customers/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/dashboard/noticesboard/[id]/detail/page": "app/dashboard/noticesboard/[id]/detail/page.js",
-  "/dashboard/noticesboard/page": "app/dashboard/noticesboard/page.js",
-  "/dashboard/generalboard/page": "app/dashboard/generalboard/page.js"
+  "/dashboard/fraudboard/page": "app/dashboard/fraudboard/page.js",
+  "/dashboard/noticesboard/[id]/detail/page": "app/dashboard/noticesboard/[id]/detail/page.js"
 }
