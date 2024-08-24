@@ -25,12 +25,16 @@ import { type FraudSearchType } from '@/types/board/fraud';
 import { useDeleteFraudBoard, useFetchFraudBoardData } from '@/hooks/board/use-fraud';
 import { useSelection } from '@/hooks/use-selection';
 
+import { ConfirmDialog } from '../customer/confirm-dialog'; // 경고 다이얼로그 컴포넌트 임포트
 import { FraudBoardFilters } from './fraudboard-filters';
 
 export function FraudBoardTable(): React.JSX.Element {
   const [searchType, setSearchType] = React.useState<FraudSearchType>('goodname');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(0); // 페이지네이션의 기본 페이지를 0으로 설정
+  const [confirmOpen, setConfirmOpen] = React.useState(false); // 다이얼로그 열림 상태 관리
+  const [selectedIdsToDelete, setSelectedIdsToDelete] = React.useState<number[]>([]); // 삭제할 항목을 저장
+
   const rowsPerPage = 10;
 
   const router = useRouter();
@@ -43,11 +47,12 @@ export function FraudBoardTable(): React.JSX.Element {
   const { doDeleteFraudBoard, loading: deleteLoading } = useDeleteFraudBoard();
 
   const handleDeleteFraudBoards = async (): Promise<void> => {
-    if (selected.size === 0) return;
+    setConfirmOpen(true);
+    setSelectedIdsToDelete(Array.from(selected));
+  };
 
-    const selectedIds = Array.from(selected);
-
-    for (const bofIdx of selectedIds) {
+  const confirmDelete = async (): Promise<void> => {
+    for (const bofIdx of selectedIdsToDelete) {
       await doDeleteFraudBoard(bofIdx);
       setData((prevData) => {
         if (!prevData) return prevData;
@@ -58,6 +63,7 @@ export function FraudBoardTable(): React.JSX.Element {
       });
     }
     deselectAll();
+    setConfirmOpen(false); // 다이얼로그 닫기
   };
 
   const handlePageChange = (_event: unknown, newPage: number): void => {
@@ -152,7 +158,7 @@ export function FraudBoardTable(): React.JSX.Element {
                       if ((event.target as HTMLElement).closest('input[type="checkbox"]')) {
                         return;
                       }
-                      router.push(`/dashboard/fraudboard/${row.bof_idx}/detail`); // 라우팅 경로 수정
+                      router.push(`/dashboard/fraudboard/${row.bof_idx}/detail`);
                     }}
                   >
                     <TableCell padding="checkbox">
@@ -205,6 +211,18 @@ export function FraudBoardTable(): React.JSX.Element {
         onRowsPerPageChange={handleRowsPerPageChange}
         rowsPerPage={rowsPerPage}
         rowsPerPageOptions={[]}
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => {
+          setConfirmOpen(false);
+        }}
+        onConfirm={confirmDelete}
+        loading={deleteLoading}
+        title="삭제 확인"
+        description="선택한 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmButtonText="삭제"
       />
     </Card>
   );

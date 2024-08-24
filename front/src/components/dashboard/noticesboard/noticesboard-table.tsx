@@ -25,12 +25,14 @@ import { type NoticeSearchType } from '@/types/board/notices';
 import { useDeleteNotice, useFetchNoticeData } from '@/hooks/board/use-notices';
 import { useSelection } from '@/hooks/use-selection';
 
+import { ConfirmDialog } from '../customer/confirm-dialog'; // ConfirmDialog 컴포넌트 임포트
 import { NoticesBoardFilters } from './noticesboard-filters';
 
 export function NoticesBoardTable(): React.JSX.Element {
   const [searchType, setSearchType] = React.useState<NoticeSearchType>('subject');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(0); // 페이지네이션의 기본 페이지를 0으로 설정
+  const [confirmOpen, setConfirmOpen] = React.useState(false); // ConfirmDialog 상태 관리
   const rowsPerPage = 10;
 
   const router = useRouter();
@@ -58,6 +60,7 @@ export function NoticesBoardTable(): React.JSX.Element {
       });
     }
     deselectAll();
+    setConfirmOpen(false); // 삭제 후 ConfirmDialog 닫기
   };
 
   const handlePageChange = (_event: unknown, newPage: number): void => {
@@ -84,7 +87,9 @@ export function NoticesBoardTable(): React.JSX.Element {
           variant="contained"
           color="error"
           sx={{ ml: 2 }}
-          onClick={handleDeleteNotices}
+          onClick={() => {
+            setConfirmOpen(true);
+          }} // 삭제 버튼 클릭 시 ConfirmDialog 오픈
           disabled={selected.size === 0 || deleteLoading}
         >
           {deleteLoading ? '삭제 중...' : '삭제'}
@@ -205,6 +210,18 @@ export function NoticesBoardTable(): React.JSX.Element {
         onRowsPerPageChange={handleRowsPerPageChange}
         rowsPerPage={rowsPerPage}
         rowsPerPageOptions={[]}
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => {
+          setConfirmOpen(false);
+        }}
+        onConfirm={handleDeleteNotices}
+        loading={deleteLoading}
+        title="공지사항 삭제 확인"
+        description="선택한 공지사항을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmButtonText="삭제"
       />
     </Card>
   );

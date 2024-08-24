@@ -1,7 +1,9 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import {
   deleteGeneralBoard,
-  fetchPostCategoriesByDate,
+  fetchPostCategoriesByPeriod,
   getGeneralBoardDetail,
   getGeneralBoardList,
   searchGeneralBoardByContent,
@@ -184,15 +186,16 @@ export function useFetchBoardData(
   return { data, loading, error, setData };
 }
 
-export function usePostCategoriesByDate(date: string): {
+// 통계 카테고리
+export function useGeneralPostCategoriesByPeriod(): {
   data: PostCategoryListResponse | null;
   loading: boolean;
   error: string;
 } {
   return useFetch(
-    fetchPostCategoriesByDate,
+    fetchPostCategoriesByPeriod,
     '포스트 카테고리 데이터를 가져오는 중 오류가 발생했습니다.',
-    date,
+    undefined,
     undefined
   );
 }

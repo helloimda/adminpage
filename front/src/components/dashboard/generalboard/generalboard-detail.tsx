@@ -1,15 +1,24 @@
+'use client';
+
 import * as React from 'react';
-import { useParams } from 'next/navigation';
-import { Avatar, Box, Card, CardContent, Grid, Stack, Typography } from '@mui/material';
+import { useParams, useRouter } from 'next/navigation';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import { Avatar, Box, Button, Card, CardContent, Grid, IconButton, Stack, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 
-import { useGeneralBoardDetail } from '@/hooks/board/user-gener';
+import { useDeleteGeneralBoard, useGeneralBoardDetail } from '@/hooks/board/user-gener';
+
+import { ConfirmDialog } from '../customer/confirm-dialog';
 
 export default function GeneralBoardDetailPage(): React.JSX.Element {
   const { id } = useParams<{ id: string }>();
   const boIdx = id ? parseInt(id, 10) : null;
-
+  const router = useRouter();
   const { data, loading, error } = useGeneralBoardDetail(boIdx ?? 0);
+  const { doDeleteBoard, loading: deleteLoading, error: deleteError } = useDeleteGeneralBoard();
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -28,6 +37,23 @@ export default function GeneralBoardDetailPage(): React.JSX.Element {
       </Box>
     );
   }
+
+  const handlePrevImage = (): void => {
+    setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? data.images.length - 1 : prevIndex - 1));
+  };
+
+  const handleNextImage = (): void => {
+    setCurrentImageIndex((prevIndex) => (prevIndex === data.images.length - 1 ? 0 : prevIndex + 1));
+  };
+
+  const handleDelete = async (): Promise<void> => {
+    if (boIdx !== null) {
+      await doDeleteBoard(boIdx);
+      if (!deleteError) {
+        router.push('/dashboard/generalboard'); // 삭제 후 목록 페이지로 이동
+      }
+    }
+  };
 
   return (
     <Box sx={{ p: 5 }}>
@@ -50,22 +76,41 @@ export default function GeneralBoardDetailPage(): React.JSX.Element {
             {data.content}
           </Typography>
 
-          <Grid container spacing={2} sx={{ mt: 4 }}>
-            {data.images.map((image) => (
-              <Grid item xs={12} sm={6} key={image.img_idx}>
-                <Box
-                  component="img"
-                  sx={{
-                    width: '100%',
-                    height: 'auto',
-                    borderRadius: 2,
-                  }}
-                  alt={image.file_name}
-                  src={image.file_url}
-                />
-              </Grid>
-            ))}
-          </Grid>
+          <Box sx={{ position: 'relative', mt: 4 }}>
+            {data.images.length > 1 && (
+              <>
+                <IconButton
+                  onClick={handlePrevImage}
+                  sx={{ position: 'absolute', top: '50%', left: 0, transform: 'translateY(-50%)' }}
+                >
+                  <ArrowBackIosIcon />
+                </IconButton>
+                <IconButton
+                  onClick={handleNextImage}
+                  sx={{ position: 'absolute', top: '50%', right: 0, transform: 'translateY(-50%)' }}
+                >
+                  <ArrowForwardIosIcon />
+                </IconButton>
+              </>
+            )}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '100%',
+                height: 'auto',
+                overflow: 'hidden',
+              }}
+            >
+              <Box
+                component="img"
+                src={data.images[currentImageIndex]?.file_url}
+                alt={data.images[currentImageIndex]?.file_name}
+                sx={{ maxWidth: '100%', maxHeight: '500px', borderRadius: 2 }}
+              />
+            </Box>
+          </Box>
 
           <Grid container spacing={4} sx={{ mt: 4 }}>
             <Grid item xs={6}>
@@ -89,8 +134,38 @@ export default function GeneralBoardDetailPage(): React.JSX.Element {
               </Typography>
             </Grid>
           </Grid>
+
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            {deleteError && (
+              <Typography variant="body2" color="error">
+                {deleteError}
+              </Typography>
+            )}
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => {
+                setConfirmOpen(true);
+              }}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? '삭제 중...' : '삭제'}
+            </Button>
+          </Box>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => {
+          setConfirmOpen(false);
+        }}
+        onConfirm={handleDelete}
+        loading={deleteLoading}
+        title="게시글 삭제 확인"
+        description="이 게시글을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmButtonText="삭제"
+      />
     </Box>
   );
 }

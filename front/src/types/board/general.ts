@@ -61,8 +61,8 @@ export type GeneralBoardSearchType = 'subject' | 'content' | 'nickname';
 
 export interface PostCategory {
   ca_idx: number;
-  cd_subtag: string | null;
-  count: number;
+  cd_tag: string | null;
+  total_posts: number;
 }
 
 export type PostCategoryListResponse = PostCategory[];
@@ -88,3 +88,5 @@ export type GeneralCommentListResponse = GeneralComment[];
 export interface DeleteGeneralCommentResponse {
   message: string; // 삭제 성공 메시지
 }
+
+export type GeneralPeriodType = 'date' | 'week' | 'month' | 'all';

@@ -25,6 +25,7 @@ import type { GeneralBoardSearchType } from '@/types/board/general';
 import { useDeleteGeneralBoard, useFetchBoardData } from '@/hooks/board/user-gener';
 import { useSelection } from '@/hooks/use-selection';
 
+import { ConfirmDialog } from '../customer/confirm-dialog';
 import { GeneralBoardFilters } from './generalboard-filters';
 
 export function GeneralBoardTable(): React.JSX.Element {
@@ -33,24 +34,27 @@ export function GeneralBoardTable(): React.JSX.Element {
   const [currentPage, setCurrentPage] = React.useState(0);
   const rowsPerPage = 10;
 
+  const [confirmOpen, setConfirmOpen] = React.useState(false); // 다이얼로그 상태 추가
+  const [selectedToDelete, setSelectedToDelete] = React.useState<Set<number>>(new Set());
+
   const router = useRouter();
 
-  // 게시글 목록을 가져오는 훅
   const { data, loading, setData } = useFetchBoardData(searchQuery, searchType, currentPage);
 
-  // 선택된 게시글 관리 훅
   const boIdxArray = React.useMemo(() => data?.data.map((row) => row.bo_idx) || [], [data]);
   const { selectAll, deselectAll, selectOne, deselectOne, selected } = useSelection(boIdxArray);
 
   const { doDeleteBoard, loading: deleteLoading } = useDeleteGeneralBoard();
 
-  const handleDeleteBoards = async (): Promise<void> => {
+  const handleDeleteBoards = (): void => {
     if (selected.size === 0) return;
+    setSelectedToDelete(new Set(selected)); // 선택된 항목 저장
+    setConfirmOpen(true); // 다이얼로그 열기
+  };
 
-    const selectedIds = Array.from(selected);
-
-    for (const boIdx of selectedIds) {
-      await doDeleteBoard(boIdx);
+  const confirmDeleteBoards = async (): Promise<void> => {
+    for (const boIdx of Array.from(selectedToDelete)) {
+      await doDeleteBoard(Number(boIdx));
       setData((prevData) => {
         if (!prevData) return prevData;
         return {
@@ -60,6 +64,7 @@ export function GeneralBoardTable(): React.JSX.Element {
       });
     }
     deselectAll();
+    setConfirmOpen(false); // 다이얼로그 닫기
   };
 
   const handlePageChange = (_event: unknown, newPage: number): void => {
@@ -87,7 +92,7 @@ export function GeneralBoardTable(): React.JSX.Element {
           color="error"
           sx={{ ml: 2 }}
           onClick={handleDeleteBoards}
-          disabled={selected.size === 0 || deleteLoading} // 삭제 중이거나 선택된 항목이 없으면 비활성화
+          disabled={selected.size === 0 || deleteLoading}
         >
           {deleteLoading ? '삭제 중...' : '삭제'}
         </Button>
@@ -197,6 +202,18 @@ export function GeneralBoardTable(): React.JSX.Element {
         onRowsPerPageChange={handleRowsPerPageChange}
         rowsPerPage={rowsPerPage}
         rowsPerPageOptions={[]}
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => {
+          setConfirmOpen(false);
+        }}
+        onConfirm={confirmDeleteBoards}
+        loading={deleteLoading}
+        title="게시글 삭제 확인"
+        description="선택한 게시글을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmButtonText="삭제"
       />
     </Card>
   );

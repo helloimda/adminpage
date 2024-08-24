@@ -42,7 +42,7 @@ export async function searchGeneralBoardByNick(id: string, page = 1): Promise<Ge
 }
 
 //통계
-export async function fetchPostCategoriesByDate(date: string): Promise<PostCategoryListResponse> {
-  const response = await apiClient.get<PostCategoryListResponse>(`/analysis/postscategory/${date}`);
+export async function fetchPostCategoriesByPeriod(): Promise<PostCategoryListResponse> {
+  const response = await apiClient.get<PostCategoryListResponse>(`/analysis/postscategoryall`);
   return response.data;
 }
