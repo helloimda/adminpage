@@ -3,19 +3,27 @@
 import React, { useEffect, useState } from 'react';
 import {
   deleteGeneralBoard,
+  deleteGeneralComment,
   fetchPostCategoriesByPeriod,
+  GeneralCommentSearchType,
   getGeneralBoardDetail,
   getGeneralBoardList,
+  getGeneralCommentDetail,
+  getGeneralCommentList,
   searchGeneralBoardByContent,
   searchGeneralBoardByNick,
   searchGeneralBoardBySubject,
+  searchGeneralCommentByContent,
+  searchGeneralCommentByNickname,
 } from '@/api/board/general';
 
 import type {
   DeleteGeneralBoardResponse,
+  DeleteGeneralCommentResponse,
   GeneralBoardDetailResponse,
   GeneralBoardListResponse,
   GeneralBoardSearchType,
+  GeneralCommentListResponse,
   PostCategoryListResponse,
 } from '@/types/board/general';
 
@@ -134,6 +142,7 @@ export function useGeneralBoardDetail(boIdx: number): {
   return useFetch(getGeneralBoardDetail, '게시글 목록을 가져오는 중 오류가 발생했습니다.', boIdx, undefined);
 }
 
+// 전체
 export function useFetchBoardData(
   searchQuery: string,
   searchType: GeneralBoardSearchType,
@@ -198,4 +207,95 @@ export function useGeneralPostCategoriesByPeriod(): {
     undefined,
     undefined
   );
+}
+
+// 특정 게시글의 댓글 리스트 가져오기 훅
+export function useGeneralCommentDetail(
+  boIdx: number,
+  page = 1
+): {
+  data: GeneralCommentListResponse | null;
+  loading: boolean;
+  error: string;
+} {
+  return useFetch(getGeneralCommentDetail, '특정 게시글의 댓글을 가져오는 중 오류가 발생했습니다.', boIdx, page);
+}
+
+// 일반 댓글 데이터 가져오기 훅
+export function useFetchGeneralCommentData(
+  searchQuery: string,
+  searchType: GeneralCommentSearchType,
+  currentPage: number
+): {
+  data: GeneralCommentListResponse | null;
+  loading: boolean;
+  error: string;
+  setData: React.Dispatch<React.SetStateAction<GeneralCommentListResponse | null>>;
+} {
+  const [data, setData] = useState<GeneralCommentListResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+
+    const fetchData = async (): Promise<void> => {
+      try {
+        let result: GeneralCommentListResponse | null = null;
+        if (searchType && searchQuery) {
+          switch (searchType) {
+            case 'nickname':
+              result = await searchGeneralCommentByNickname(searchQuery, currentPage);
+              break;
+            case 'content':
+              result = await searchGeneralCommentByContent(searchQuery, currentPage);
+              break;
+            default:
+              throw new Error('Invalid search type');
+          }
+        } else {
+          result = await getGeneralCommentList(currentPage);
+        }
+        setData(result);
+      } catch (err) {
+        setError('데이터를 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchData();
+  }, [searchQuery, searchType, currentPage]);
+
+  return { data, loading, error, setData };
+}
+
+// 댓글 삭제 훅
+export function useDeleteGeneralComment(): {
+  doDeleteComment: (cmtIdx: number) => Promise<void>;
+  loading: boolean;
+  error: string | null;
+} {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const doDeleteComment = async (cmtIdx: number): Promise<void> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response: DeleteGeneralCommentResponse = await deleteGeneralComment(cmtIdx);
+
+      if (response.message !== '댓글이 성공적으로 삭제되었습니다.') {
+        setError(response.message || '댓글 삭제 작업이 실패했습니다.');
+      }
+    } catch (err) {
+      setError('댓글 삭제 작업 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { doDeleteComment, loading, error };
 }

@@ -7,6 +7,7 @@ import {
   Box,
   Button,
   Card,
+  CardHeader,
   Checkbox,
   Divider,
   Skeleton,
@@ -18,6 +19,7 @@ import {
   TablePagination,
   TableRow,
   Typography,
+  type SxProps,
 } from '@mui/material';
 import dayjs from 'dayjs';
 
@@ -28,13 +30,17 @@ import { useSelection } from '@/hooks/use-selection';
 import { ConfirmDialog } from '../customer/confirm-dialog';
 import { GeneralBoardFilters } from './generalboard-filters';
 
-export function GeneralBoardTable(): React.JSX.Element {
+export interface GeneralBoardTableProps {
+  sx?: SxProps;
+}
+
+export function GeneralBoardTable({ sx }: GeneralBoardTableProps): React.JSX.Element {
   const [searchType, setSearchType] = React.useState<GeneralBoardSearchType>('subject');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(0);
   const rowsPerPage = 10;
 
-  const [confirmOpen, setConfirmOpen] = React.useState(false); // 다이얼로그 상태 추가
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [selectedToDelete, setSelectedToDelete] = React.useState<Set<number>>(new Set());
 
   const router = useRouter();
@@ -48,8 +54,8 @@ export function GeneralBoardTable(): React.JSX.Element {
 
   const handleDeleteBoards = (): void => {
     if (selected.size === 0) return;
-    setSelectedToDelete(new Set(selected)); // 선택된 항목 저장
-    setConfirmOpen(true); // 다이얼로그 열기
+    setSelectedToDelete(new Set(selected));
+    setConfirmOpen(true);
   };
 
   const confirmDeleteBoards = async (): Promise<void> => {
@@ -64,7 +70,7 @@ export function GeneralBoardTable(): React.JSX.Element {
       });
     }
     deselectAll();
-    setConfirmOpen(false); // 다이얼로그 닫기
+    setConfirmOpen(false);
   };
 
   const handlePageChange = (_event: unknown, newPage: number): void => {
@@ -79,7 +85,15 @@ export function GeneralBoardTable(): React.JSX.Element {
   const selectedAll = (data?.data.length || 0) > 0 && selected?.size === data?.data.length;
 
   return (
-    <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2, ...sx }}>
+      <CardHeader
+        title="게시글"
+        titleTypographyProps={{
+          variant: 'h4', // 제목 크기를 'h4'로 설정하여 더 크게 표시
+          fontWeight: 'bold', // 텍스트를 굵게 설정
+          color: 'primary.main', // 주요 색상으로 설정
+        }}
+      />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <GeneralBoardFilters
           searchQuery={searchQuery}
@@ -98,7 +112,7 @@ export function GeneralBoardTable(): React.JSX.Element {
         </Button>
       </Box>
 
-      <Box sx={{ overflowX: 'auto' }}>
+      <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
         <Table sx={{ minWidth: '800px' }}>
           <TableHead>
             <TableRow>

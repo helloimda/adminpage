@@ -45,7 +45,7 @@ export default function Page(): React.JSX.Element {
         <LatestProducts sx={{ height: '100%' }} />
       </Grid>
       <Grid lg={8} md={12} xs={12}>
-        <GeneralBoardTable />
+        <GeneralBoardTable sx={{ height: '400px' }} /> {/* 테이블 높이 조정 */}
       </Grid>
     </Grid>
   );

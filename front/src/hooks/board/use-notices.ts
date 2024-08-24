@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
+  createNotice,
   deleteNotice,
+  deleteNoticeImage,
+  editNotice,
   getNoticeDetail,
   getNoticeList,
   searchNoticeByContent,
@@ -9,7 +12,12 @@ import {
 } from '@/api/board/notices';
 
 import type {
+  CreateNoticeRequest,
+  CreateNoticeResponse,
+  DeleteNoticeImageResponse,
   DeleteNoticeResponse,
+  EditNoticeRequest,
+  EditNoticeResponse,
   NoticeDetailResponse,
   NoticeListResponse,
   NoticeSearchType,
@@ -181,4 +189,84 @@ export function useFetchNoticeData(
   }, [searchQuery, searchType, currentPage]);
 
   return { data, loading, error, setData };
+}
+
+export function useCreateNotice(): {
+  doCreateNotice: (data: CreateNoticeRequest) => Promise<CreateNoticeResponse | null>;
+  loading: boolean;
+  error: string | null;
+} {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const doCreateNotice = async (data: CreateNoticeRequest): Promise<CreateNoticeResponse | null> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await createNotice(data);
+      return response;
+    } catch (err) {
+      setError('공지사항 생성 중 오류가 발생했습니다.');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { doCreateNotice, loading, error };
+}
+
+// 공지사항 수정 훅
+export function useEditNotice(): {
+  doEditNotice: (boIdx: number, data: EditNoticeRequest) => Promise<EditNoticeResponse | null>;
+  loading: boolean;
+  error: string | null;
+} {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const doEditNotice = async (boIdx: number, data: EditNoticeRequest): Promise<EditNoticeResponse | null> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await editNotice(boIdx, data);
+      return response;
+    } catch (err) {
+      setError('공지사항 수정 중 오류가 발생했습니다.');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { doEditNotice, loading, error };
+}
+
+// 공지사항 이미지 삭제 훅
+export function useDeleteNoticeImage(): {
+  doDeleteNoticeImage: (boIdx: number, imgIdx: number) => Promise<DeleteNoticeImageResponse | null>;
+  loading: boolean;
+  error: string | null;
+} {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const doDeleteNoticeImage = async (boIdx: number, imgIdx: number): Promise<DeleteNoticeImageResponse | null> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await deleteNoticeImage(boIdx, imgIdx);
+      return response;
+    } catch (err) {
+      setError('공지사항 이미지 삭제 중 오류가 발생했습니다.');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { doDeleteNoticeImage, loading, error };
 }

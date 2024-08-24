@@ -83,17 +83,30 @@ export function NoticesBoardTable(): React.JSX.Element {
           onSearchQueryChange={setSearchQuery}
           onSearchTypeChange={setSearchType}
         />
-        <Button
-          variant="contained"
-          color="error"
-          sx={{ ml: 2 }}
-          onClick={() => {
-            setConfirmOpen(true);
-          }} // 삭제 버튼 클릭 시 ConfirmDialog 오픈
-          disabled={selected.size === 0 || deleteLoading}
-        >
-          {deleteLoading ? '삭제 중...' : '삭제'}
-        </Button>
+        <Box>
+          {/* 생성 버튼 추가 */}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              router.push('/dashboard/noticesboard/create'); // 생성 페이지로 라우팅
+            }}
+          >
+            생성
+          </Button>
+
+          <Button
+            variant="contained"
+            color="error"
+            sx={{ ml: 2 }}
+            onClick={() => {
+              setConfirmOpen(true);
+            }} // 삭제 버튼 클릭 시 ConfirmDialog 오픈
+            disabled={selected.size === 0 || deleteLoading}
+          >
+            {deleteLoading ? '삭제 중...' : '삭제'}
+          </Button>
+        </Box>
       </Box>
 
       <Box sx={{ overflowX: 'auto' }}>

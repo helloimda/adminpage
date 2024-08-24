@@ -1,3 +1,5 @@
+import { Pagination } from '../common';
+
 export interface GeneralBoard {
   bo_idx: number;
   mem_id: string;
@@ -83,10 +85,11 @@ export interface GeneralComment {
   regdt: string; // 댓글 작성일
 }
 
-export type GeneralCommentListResponse = GeneralComment[];
+export interface GeneralCommentListResponse {
+  data: GeneralComment[]; // 댓글 리스트
+  pagination: Pagination; // 페이지네이션 정보
+}
 
 export interface DeleteGeneralCommentResponse {
   message: string; // 삭제 성공 메시지
 }
-
-export type GeneralPeriodType = 'date' | 'week' | 'month' | 'all';
