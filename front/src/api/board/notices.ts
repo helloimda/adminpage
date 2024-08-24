@@ -1,3 +1,4 @@
+import { DeleteGeneralCommentResponse, GeneralCommentListResponse } from '@/types/board/general';
 import type { DeleteNoticeResponse, NoticeDetailResponse, NoticeListResponse } from '@/types/board/notices';
 import apiClient from '@/lib/api/client';
 
@@ -34,5 +35,16 @@ export async function searchNoticeByContent(content: string, page = 1): Promise<
 // 공지사항 닉네임으로 검색
 export async function searchNoticeByNick(nickname: string, page = 1): Promise<NoticeListResponse> {
   const response = await apiClient.get<NoticeListResponse>(`/postmanage/notice/search/nick/${nickname}/${page}`);
+  return response.data;
+}
+
+export async function getGeneralComments(boIdx: number): Promise<GeneralCommentListResponse> {
+  const response = await apiClient.get<GeneralCommentListResponse>(`/postmanage/general/comment/${boIdx}`);
+  return response.data;
+}
+
+// 일반 게시글 댓글 삭제
+export async function deleteGeneralComment(cmtIdx: number): Promise<DeleteGeneralCommentResponse> {
+  const response = await apiClient.get<DeleteGeneralCommentResponse>(`/postmanage/general/comment/delete/${cmtIdx}`);
   return response.data;
 }

@@ -22,10 +22,14 @@ import dayjs from 'dayjs';
 
 import 'dayjs/locale/ko';
 
+import WarningIcon from '@mui/icons-material/Warning';
+import { Alert, CardHeader, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+
 import { type BenUser } from '@/types/customer';
 import { useDoUnBen, useFetchBenList, useFetchIdBenUserList, useFetchNickBenUserList } from '@/hooks/use-customer';
 import { useSelection } from '@/hooks/use-selection';
 
+import { ConfirmDialog } from '../confirm-dialog';
 import { CustomersFilters } from '../customers-filters';
 import { BenCustomerModal } from '../modal/benuser-modal';
 
@@ -34,10 +38,11 @@ dayjs.locale('ko');
 export function CustomersBenTable(): React.JSX.Element {
   const [_selectedCustomer, setSelectedCustomer] = React.useState<BenUser | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [currentPage, setCurrentPage] = React.useState(0);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchType, setSearchType] = React.useState<'id' | 'nickname'>('id');
-  const [usersState, setUsersState] = React.useState<BenUser[]>([]); // 사용자를 저장할 상태 추가
+  const [usersState, setUsersState] = React.useState<BenUser[]>([]);
 
   const defaultFetch = useFetchBenList(currentPage + 1);
   const idFetch = useFetchIdBenUserList(searchQuery, currentPage + 1);
@@ -56,7 +61,7 @@ export function CustomersBenTable(): React.JSX.Element {
 
   React.useEffect(() => {
     if (!loading && benUsers) {
-      setUsersState(benUsers || []); // 데이터를 가져온 후 usersState 업데이트
+      setUsersState(benUsers || []);
     }
   }, [benUsers, loading]);
 
@@ -114,12 +119,15 @@ export function CustomersBenTable(): React.JSX.Element {
     setSelectedCustomer(null);
   };
 
-  const handleBulkUnban = async (): Promise<void> => {
+  const handleBulkUnban = (): void => {
     if (selected.size === 0) return;
+    setConfirmOpen(true); // 다이얼로그 열기
+  };
 
+  const confirmBulkUnban = async (): Promise<void> => {
     const selectedIds = Array.from(selected);
     await Promise.all(selectedIds.map((memIdx) => doUnBen(memIdx)));
-    setModalOpen(false);
+    setConfirmOpen(false);
     deselectAll();
     setUsersState((prevUsers) => prevUsers.filter((user) => !selectedIds.includes(user.mem_idx)));
   };
@@ -142,6 +150,14 @@ export function CustomersBenTable(): React.JSX.Element {
 
   return (
     <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2, boxShadow: 3 }}>
+      <CardHeader
+        title="정지 유저"
+        titleTypographyProps={{
+          variant: 'h4',
+          fontWeight: 'bold',
+          color: 'primary.main',
+        }}
+      />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <CustomersFilters
           searchQuery={searchQuery}
@@ -265,6 +281,77 @@ export function CustomersBenTable(): React.JSX.Element {
           onUpdate={handleUserRemove}
         />
       )}
+
+      <Dialog
+        open={confirmOpen}
+        onClose={() => {
+          setConfirmOpen(false);
+        }}
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-description"
+      >
+        <DialogTitle id="confirm-dialog-title" sx={{ display: 'flex', alignItems: 'center' }}>
+          <WarningIcon sx={{ mr: 1, color: 'error.main' }} />
+          정말로 정지를 해제하시겠습니까?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText
+            id="confirm-dialog-description"
+            sx={{
+              fontWeight: 'bold',
+              color: 'text.primary',
+              mt: 1,
+              mb: 2,
+              lineHeight: 1.5,
+            }}
+          >
+            선택된 사용자들의 정지를 해제하면 즉시 서비스 이용이 가능해집니다.
+          </DialogContentText>
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            이 작업은 회원의 서비스 접근을 즉시 허용하게 됩니다.
+          </Alert>
+        </DialogContent>
+        <DialogActions sx={{ mt: 2 }}>
+          <Button
+            onClick={() => {
+              setConfirmOpen(false);
+            }}
+            color="primary"
+            sx={{
+              fontWeight: 'bold',
+              color: 'grey.600',
+            }}
+          >
+            취소
+          </Button>
+          <Button
+            onClick={confirmBulkUnban}
+            color="error"
+            sx={{
+              fontWeight: 'bold',
+              backgroundColor: 'error.main',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'error.dark',
+              },
+            }}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : '해제'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => {
+          setConfirmOpen(false);
+        }}
+        onConfirm={confirmBulkUnban}
+        loading={loading}
+        title="정지 해제 확인"
+        description="선택된 사용자들의 정지를 해제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmButtonText="해제"
+      />
     </Card>
   );
 }

@@ -16,30 +16,29 @@ import TableCell from '@mui/material/TableCell';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
-import dayjs from 'dayjs';
 
 import 'dayjs/locale/ko';
 
-import { Button, TableHead } from '@mui/material';
+import { Button, CardHeader, TableHead } from '@mui/material';
 
 import { type User } from '@/types/customer';
 import { useDeleteUser, useFetchIdUserList, useFetchNickUserList, useFetchUserList } from '@/hooks/use-customer';
 import { useSelection } from '@/hooks/use-selection';
 
+import { ConfirmDialog } from '../confirm-dialog';
 import { CustomersFilters } from '../customers-filters';
 import { BenCustomerModal } from '../modal/benuser-modal';
 import { CustomerModal } from '../modal/customers-modal';
-
-dayjs.locale('ko');
 
 export function CustomersTable(): React.JSX.Element {
   const [selectedCustomer, setSelectedCustomer] = React.useState<User | null>(null);
   const [_selectedBenUser, setSelectedBenUser] = React.useState<User | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false); // 삭제 확인 다이얼로그 상태
   const [currentPage, setCurrentPage] = React.useState(0);
   const { doDeleteUser, loading: deleteLoading } = useDeleteUser();
 
-  const [usersState, setUsersState] = React.useState<User[]>([]); // usersState 추가
+  const [usersState, setUsersState] = React.useState<User[]>([]);
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchType, setSearchType] = React.useState<'id' | 'nickname'>('id');
@@ -141,7 +140,11 @@ export function CustomersTable(): React.JSX.Element {
     setSelectedBenUser(null);
   };
 
-  const handleDeleteUsers = async (): Promise<void> => {
+  const handleDeleteUsers = (): void => {
+    setConfirmOpen(true); // 다이얼로그 열기
+  };
+
+  const confirmDeleteUsers = async (): Promise<void> => {
     const selectedIds = Array.from(selected).map(Number);
     await Promise.all(
       selectedIds.map(async (memIdx) => {
@@ -150,8 +153,8 @@ export function CustomersTable(): React.JSX.Element {
     );
     setUsersState((prevUsers) => prevUsers.filter((user) => !selectedIds.includes(user.mem_idx)));
     deselectAll();
+    setConfirmOpen(false); // 다이얼로그 닫기
   };
-
   if (loading && !usersState.length) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -166,6 +169,14 @@ export function CustomersTable(): React.JSX.Element {
 
   return (
     <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <CardHeader
+        title="유저"
+        titleTypographyProps={{
+          variant: 'h4', // 제목 크기를 'h4'로 설정하여 더 크게 표시
+          fontWeight: 'bold', // 텍스트를 굵게 설정
+          color: 'primary.main', // 주요 색상으로 설정
+        }}
+      />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <CustomersFilters
           searchQuery={searchQuery}
@@ -204,7 +215,7 @@ export function CustomersTable(): React.JSX.Element {
               <TableCell>아이디</TableCell>
               <TableCell>닉네임</TableCell>
               <TableCell>휴대폰 번호</TableCell>
-              <TableCell>정지 유무 </TableCell>
+              <TableCell>정지 유무</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -294,6 +305,18 @@ export function CustomersTable(): React.JSX.Element {
           onUpdate={handleUserUpdate}
         />
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => {
+          setConfirmOpen(false);
+        }}
+        onConfirm={confirmDeleteUsers}
+        loading={deleteLoading}
+        title="계정 삭제 확인"
+        description="선택한 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmButtonText="삭제"
+      />
     </Card>
   );
 }

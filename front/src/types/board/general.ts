@@ -66,3 +66,25 @@ export interface PostCategory {
 }
 
 export type PostCategoryListResponse = PostCategory[];
+
+export interface GeneralComment {
+  cmt_idx: number; // 댓글 ID
+  bo_idx: number; // 게시글 ID
+  pcmt_idx: number | null; // 부모 댓글 ID (답글의 경우, null 가능)
+  mem_idx: number; // 작성자 ID
+  mem_id: string; // 작성자 ID 또는 이메일
+  content: string; // 댓글 내용
+  isbest: 'Y' | 'N'; // 베스트 댓글 여부
+  isAnonymous: 'Y' | 'N'; // 익명 여부
+  cnt_star: number; // 별 개수
+  cnt_good: number; // 좋아요 개수
+  cnt_bad: number; // 싫어요 개수
+  onum: number; // 순서 번호
+  regdt: string; // 댓글 작성일
+}
+
+export type GeneralCommentListResponse = GeneralComment[];
+
+export interface DeleteGeneralCommentResponse {
+  message: string; // 삭제 성공 메시지
+}
