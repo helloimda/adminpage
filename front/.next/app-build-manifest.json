@@ -1,9 +1,14 @@
 {
   "pages": {
-    "/page": [
+    "/dashboard/customers/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/dashboard/customers/page.js"
+    ],
+    "/dashboard/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/layout.js"
     ],
     "/layout": [
       "static/chunks/webpack.js",
@@ -21,25 +26,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/page.js"
     ],
-    "/dashboard/layout": [
+    "/dashboard/noticesboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/layout.js"
-    ],
-    "/dashboard/customers/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/customers/page.js"
+      "static/chunks/app/dashboard/noticesboard/page.js"
     ],
     "/dashboard/generalboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/generalboard/page.js"
     ],
-    "/dashboard/noticesboard/page": [
+    "/dashboard/generalboard/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/noticesboard/page.js"
+      "static/chunks/app/dashboard/generalboard/[id]/page.js"
     ],
     "/dashboard/fraudboard/page": [
       "static/chunks/webpack.js",
@@ -50,11 +50,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/noticesboard/[id]/detail/page.js"
-    ],
-    "/dashboard/generalboard/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/generalboard/[id]/page.js"
     ],
     "/dashboard/fraudboard/[id]/detail/page": [
       "static/chunks/webpack.js",
@@ -71,10 +66,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/noticesboard/create/page.js"
     ],
-    "/_not-found/page": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/chunks/app/page.js"
     ]
   }
 }
