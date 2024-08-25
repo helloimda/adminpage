@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Card from '@mui/material/Card';
@@ -9,14 +11,28 @@ import { ArrowDown as ArrowDownIcon } from '@phosphor-icons/react/dist/ssr/Arrow
 import { ArrowUp as ArrowUpIcon } from '@phosphor-icons/react/dist/ssr/ArrowUp';
 import { Users as UsersIcon } from '@phosphor-icons/react/dist/ssr/Users';
 
+import { MemberDateType } from '@/types/customer';
+import { useMembersCountByType } from '@/hooks/use-customer';
+
 export interface TotalCustomersProps {
-  diff?: number;
-  trend: 'up' | 'down';
   sx?: SxProps;
-  value: string;
 }
 
-export function TotalCustomers({ diff, trend, sx, value }: TotalCustomersProps): React.JSX.Element {
+export function TotalCustomers({ sx }: TotalCustomersProps): React.JSX.Element {
+  const [selectedPeriod] = React.useState<MemberDateType>('month');
+
+  const { memberCount } = useMembersCountByType(selectedPeriod);
+
+  // 현재 달과 이전 달의 회원 수 계산
+  const currentMonthCount = memberCount.length > 0 ? Object.values(memberCount[memberCount.length - 1])[0] : 0;
+  const previousMonthCount = memberCount.length > 1 ? Object.values(memberCount[memberCount.length - 2])[0] : 0;
+
+  // 회원 수의 증감 계산
+  const difference = currentMonthCount - previousMonthCount;
+  const percentageDiff = previousMonthCount ? Math.round((difference / previousMonthCount) * 100) : 0;
+
+  // 증감 추세 계산
+  const trend = difference > 0 ? 'up' : 'down';
   const TrendIcon = trend === 'up' ? ArrowUpIcon : ArrowDownIcon;
   const trendColor = trend === 'up' ? 'var(--mui-palette-success-main)' : 'var(--mui-palette-error-main)';
 
@@ -29,25 +45,25 @@ export function TotalCustomers({ diff, trend, sx, value }: TotalCustomersProps):
               <Typography color="text.secondary" variant="overline">
                 전체 사용자 수
               </Typography>
-              <Typography variant="h4">{value}</Typography>
+              <Typography variant="h4">{String(currentMonthCount)}</Typography>
             </Stack>
-            <Avatar sx={{ backgroundColor: 'var(--mui-palette-success-main)', height: '56px', width: '56px' }}>
+            <Avatar sx={{ backgroundColor: trendColor, height: '56px', width: '56px' }}>
               <UsersIcon fontSize="var(--icon-fontSize-lg)" />
             </Avatar>
           </Stack>
-          {diff ? (
+          {percentageDiff !== 0 && (
             <Stack sx={{ alignItems: 'center' }} direction="row" spacing={2}>
               <Stack sx={{ alignItems: 'center' }} direction="row" spacing={0.5}>
                 <TrendIcon color={trendColor} fontSize="var(--icon-fontSize-md)" />
                 <Typography color={trendColor} variant="body2">
-                  {diff}%
+                  {percentageDiff}%
                 </Typography>
               </Stack>
               <Typography color="text.secondary" variant="caption">
                 지난 달 대비
               </Typography>
             </Stack>
-          ) : null}
+          )}
         </Stack>
       </CardContent>
     </Card>
