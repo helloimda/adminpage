@@ -1,14 +1,9 @@
 {
   "pages": {
-    "/dashboard/customers/page": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/customers/page.js"
-    ],
-    "/dashboard/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/layout.js"
+      "static/chunks/app/page.js"
     ],
     "/layout": [
       "static/chunks/webpack.js",
@@ -26,10 +21,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/page.js"
     ],
-    "/dashboard/noticesboard/page": [
+    "/dashboard/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/noticesboard/page.js"
+      "static/chunks/app/dashboard/layout.js"
+    ],
+    "/dashboard/customers/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/customers/page.js"
     ],
     "/dashboard/generalboard/page": [
       "static/chunks/webpack.js",
@@ -41,6 +41,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/generalboard/[id]/page.js"
     ],
+    "/dashboard/noticesboard/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/noticesboard/page.js"
+    ],
     "/dashboard/fraudboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -51,25 +56,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/noticesboard/[id]/detail/page.js"
     ],
-    "/dashboard/fraudboard/[id]/detail/page": [
+    "/dashboard/noticesboard/create/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/fraudboard/[id]/detail/page.js"
+      "static/chunks/app/dashboard/noticesboard/create/page.js"
     ],
     "/dashboard/noticesboard/[id]/edit/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/noticesboard/[id]/edit/page.js"
     ],
-    "/dashboard/noticesboard/create/page": [
+    "/dashboard/fraudboard/[id]/detail/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/noticesboard/create/page.js"
-    ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/dashboard/fraudboard/[id]/detail/page.js"
     ]
   }
 }
