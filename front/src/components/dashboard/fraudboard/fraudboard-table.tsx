@@ -7,6 +7,7 @@ import {
   Box,
   Button,
   Card,
+  CardHeader,
   Checkbox,
   Divider,
   Skeleton,
@@ -79,6 +80,14 @@ export function FraudBoardTable(): React.JSX.Element {
 
   return (
     <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <CardHeader
+        title="사기 피해 게시글"
+        titleTypographyProps={{
+          variant: 'h4', // 제목 크기를 'h4'로 설정하여 더 크게 표시
+          fontWeight: 'bold', // 텍스트를 굵게 설정
+          color: 'primary.main', // 주요 색상으로 설정
+        }}
+      />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <FraudBoardFilters
           searchQuery={searchQuery}

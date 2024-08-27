@@ -180,7 +180,13 @@ export function GeneralCommentSmallTable({ sx }: GeneralCommentSmallTableProps):
           horizontal: 'right',
         }}
       >
-        <MenuItem onClick={() => handleDeleteClick(menuCmtIdx ?? 0)}>삭제</MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleDeleteClick(menuCmtIdx ?? 0);
+          }}
+        >
+          삭제
+        </MenuItem>
       </Menu>
 
       <ConfirmDialog
