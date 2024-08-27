@@ -11,10 +11,6 @@ import {
   QnaResponseList,
 } from '@/types/board/qna';
 
-// QNA API 함수들을 불러옴
-
-// QNA 타입 정의를 불러옴
-
 // 데이터를 가져오는 공통 훅
 function useFetch<T, A1>(
   fetchFunction: (arg1: A1) => Promise<T>,
@@ -70,18 +66,23 @@ export function usePostQnaAnswer(): {
   doPostAnswer: (meqIdx: number, rsubject: string, rcontent: string) => Promise<void>;
   loading: boolean;
   error: string | null;
+  success: boolean;
 } {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
 
   const doPostAnswer = async (meqIdx: number, rsubject: string, rcontent: string): Promise<void> => {
     setLoading(true);
     setError(null);
+    setSuccess(false);
 
     try {
       const response: QnaAnswerResponse = await postQnaAnswer(meqIdx, rsubject, rcontent);
 
-      if (response.message !== '문의 답변이 성공적으로 등록되었습니다.') {
+      if (response.message === '문의 답변이 성공적으로 등록되었습니다.') {
+        setSuccess(true);
+      } else {
         setError(response.message || '답변 등록 작업이 실패했습니다.');
       }
     } catch (err) {
@@ -91,7 +92,7 @@ export function usePostQnaAnswer(): {
     }
   };
 
-  return { doPostAnswer, loading, error };
+  return { doPostAnswer, loading, error, success };
 }
 
 // 미답변 QNA 리스트 가져오기 훅
